@@ -1,0 +1,1203 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文法守護戰：英文動詞三態篇</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* 基礎樣式設計，採用現代暗色玻璃擬物風格 */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Outfit', 'Noto Sans TC', sans-serif;
+            user-select: none;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0f0c1b 0%, #15102a 50%, #201335 100%);
+            color: #f3f0ff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start; /* 靠上對齊，提供滾動空間 */
+            overflow-y: auto; /* 允許垂直捲動以防內容遮擋 */
+            overflow-x: hidden;
+            padding: 30px 10px;
+        }
+
+        .game-container {
+            width: 100%;
+            max-width: 900px;
+            background: rgba(20, 16, 38, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 15px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), 0 0 40px rgba(138, 43, 226, 0.15);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        /* 頂部資訊列與標題 */
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            padding-bottom: 10px;
+        }
+
+        .game-title {
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: linear-gradient(45deg, #00f2fe, #4facfe, #8a2be2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 10px rgba(79, 172, 254, 0.2);
+        }
+
+        .stats-bar {
+            display: flex;
+            gap: 20px;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 6px 15px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .stat-coin {
+            color: #ffd700;
+            border-color: rgba(255, 215, 0, 0.3);
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.1);
+        }
+
+        /* 答題區域設計 */
+        .quiz-panel {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 15px;
+            position: relative;
+            box-shadow: inset 0 0 15px rgba(255, 255, 255, 0.02);
+            transition: opacity 0.3s ease;
+        }
+
+        .quiz-question {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #e0dbff;
+            text-align: center;
+            min-height: 24px;
+        }
+
+        .quiz-options {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .option-btn {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #d1c9ff;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            outline: none;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            background: rgba(138, 43, 226, 0.2);
+            border-color: rgba(138, 43, 226, 0.4);
+            transform: translateY(-2px);
+            color: #ffffff;
+            box-shadow: 0 5px 15px rgba(138, 43, 226, 0.2);
+        }
+
+        .option-btn:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .option-btn.correct {
+            background: rgba(46, 204, 113, 0.3) !important;
+            border-color: #2ecc71 !important;
+            color: #ffffff !important;
+            box-shadow: 0 0 15px rgba(46, 204, 113, 0.4) !important;
+        }
+
+        .option-btn.wrong {
+            background: rgba(231, 76, 60, 0.3) !important;
+            border-color: #e74c3c !important;
+            color: #ffffff !important;
+            box-shadow: 0 0 15px rgba(231, 76, 60, 0.4) !important;
+        }
+
+        /* 未開始前的禁用遮罩效果 */
+        .disabled-before-start {
+            pointer-events: none;
+            opacity: 0.4;
+        }
+
+        /* 答題冷卻遮罩 */
+        .quiz-cooldown-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 12, 27, 0.85);
+            border-radius: 16px;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: #ff4757;
+            font-weight: 700;
+            font-size: 1.2rem;
+            z-index: 10;
+        }
+
+        /* 塔防戰鬥畫布 */
+        .canvas-wrapper {
+            position: relative;
+            width: 100%;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: #1a172e;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: auto;
+            background: linear-gradient(to bottom, #110d26 0%, #1c133a 60%, #15242a 100%);
+        }
+
+        /* 浮動跳字 (金幣飛出) */
+        .floating-text {
+            position: absolute;
+            pointer-events: none;
+            font-weight: 800;
+            font-size: 1.5rem;
+            color: #ffd700;
+            animation: floatUp 0.8s forwards ease-out;
+            text-shadow: 0 2px 5px rgba(0,0,0,0.5);
+            z-index: 100;
+        }
+
+        @keyframes floatUp {
+            0% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+            100% { opacity: 0; transform: translate(-50%, -100px) scale(0.8); }
+        }
+
+        /* 下方兵種召喚面板 */
+        .spawn-panel {
+            display: flex;
+            justify-content: space-around;
+            gap: 15px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 10px;
+            border-radius: 16px;
+            transition: opacity 0.3s ease;
+        }
+
+        .spawn-btn {
+            flex: 1;
+            position: relative;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            overflow: hidden;
+        }
+
+        .spawn-btn:hover:not(.disabled) {
+            background: rgba(138, 43, 226, 0.15);
+            border-color: rgba(138, 43, 226, 0.4);
+            transform: translateY(-3px);
+        }
+
+        .spawn-btn:active:not(.disabled) {
+            transform: translateY(0);
+        }
+
+        .spawn-btn.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .spawn-name {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 4px;
+        }
+
+        .spawn-desc {
+            font-size: 0.75rem;
+            color: #a499d4;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+
+        .spawn-cost {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: #ffd700;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* 召喚按鈕冷卻時間遮罩 */
+        .cooldown-mask {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.65);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: #00f2fe;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.1s ease;
+        }
+
+        .spawn-btn.on-cooldown .cooldown-mask {
+            opacity: 1;
+        }
+
+        /* 遊戲結束 Win/Lose 彈窗與開始按鈕動畫 */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(8, 5, 18, 0.9);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            backdrop-filter: blur(8px);
+        }
+
+        .modal-content {
+            background: linear-gradient(145deg, #1b122e 0%, #0d0918 100%);
+            border: 2px solid rgba(138, 43, 226, 0.4);
+            border-radius: 24px;
+            padding: 40px;
+            max-width: 450px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(138, 43, 226, 0.3), 0 0 20px rgba(0, 242, 254, 0.1);
+            animation: modalPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes modalPop {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .modal-title {
+            font-size: 2.2rem;
+            font-weight: 800;
+            margin-bottom: 15px;
+        }
+
+        .win .modal-title {
+            background: linear-gradient(45deg, #2ecc71, #00f2fe);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .lose .modal-title {
+            background: linear-gradient(45deg, #ff4757, #ff6b81);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .modal-desc {
+            font-size: 1.1rem;
+            color: #bcaedb;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .restart-btn {
+            background: linear-gradient(45deg, #8a2be2, #4facfe);
+            border: none;
+            color: white;
+            padding: 12px 35px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            border-radius: 30px;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(138, 43, 226, 0.4);
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        .restart-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 25px rgba(138, 43, 226, 0.6);
+        }
+
+        /* 開始按鈕呼吸效果 */
+        @keyframes pulse {
+            0% { transform: scale(1); box-shadow: 0 5px 20px rgba(0, 242, 254, 0.4); }
+            50% { transform: scale(1.06); box-shadow: 0 5px 30px rgba(138, 43, 226, 0.6); }
+            100% { transform: scale(1); box-shadow: 0 5px 20px rgba(0, 242, 254, 0.4); }
+        }
+
+        /* 中文說明浮窗 */
+        .intro-banner {
+            font-size: 0.85rem;
+            color: #7d70a3;
+            text-align: center;
+            line-height: 1.4;
+        }
+    </style>
+</head>
+<body>
+
+<div class="game-container">
+    <!-- 頂部資訊列 (金幣顯示已移至戰鬥畫面右上方) -->
+    <div class="game-header">
+        <div class="game-title">文法守護戰 (動詞三態)</div>
+    </div>
+
+    <!-- 答題與經濟面板 (未開始時加 class 禁用) -->
+    <div class="quiz-panel disabled-before-start" id="quiz-panel">
+        <div class="quiz-question" id="question-text">請點擊下方「開始遊戲」按鈕</div>
+        <div class="quiz-options" id="options-container">
+            <button class="option-btn" disabled>選項一</button>
+            <button class="option-btn" disabled>選項二</button>
+            <button class="option-btn" disabled>選項三</button>
+            <button class="option-btn" disabled>選項四</button>
+        </div>
+        <!-- 答題錯誤鎖定面板 -->
+        <div class="quiz-cooldown-overlay" id="quiz-cooldown">
+            <span id="quiz-cooldown-msg">答錯了！鎖定 3 秒</span>
+            <span id="quiz-cooldown-timer" style="font-size: 2rem; margin-top: 5px;">3</span>
+        </div>
+    </div>
+
+    <!-- 遊戲戰鬥渲染區域 -->
+    <div class="canvas-wrapper" id="canvas-wrapper">
+        <canvas id="gameCanvas" width="800" height="320"></canvas>
+        
+        <!-- 金幣顯示浮窗 (移動至戰鬥畫面右上方，採用標準 💰 避免方框 tofu 問題) -->
+        <div class="stat-item stat-coin" id="coin-display" style="position: absolute; top: 15px; right: 15px; z-index: 10; background: rgba(20, 16, 38, 0.85); backdrop-filter: blur(5px); border: 1px solid rgba(255, 215, 0, 0.4); padding: 8px 16px; border-radius: 20px; color: #ffd700; font-weight: 700; font-size: 1.1rem; box-shadow: 0 0 15px rgba(255, 215, 0, 0.15); display: none;">
+            💰 金幣: 100
+        </div>
+        
+        <!-- 開始遊戲蓋板畫面 -->
+        <div id="start-screen" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(12, 8, 28, 0.92); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100; border-radius: 12px; backdrop-filter: blur(5px);">
+            <h1 style="font-size: 2.2rem; font-weight: 800; background: linear-gradient(45deg, #00f2fe, #4facfe, #8a2be2); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 12px; text-shadow: 0 0 15px rgba(79, 172, 254, 0.3);">文法守護戰</h1>
+            <p style="font-size: 1rem; color: #bcaedb; margin-bottom: 25px; text-align: center; max-width: 80%; line-height: 1.6;">以正確的英文三態文法擊退拼寫錯誤怪獸，保衛知識殿堂！</p>
+            <button class="restart-btn" id="start-btn" onclick="startGame()" style="padding: 15px 50px; font-size: 1.2rem; background: linear-gradient(45deg, #00f2fe, #8a2be2); animation: pulse 2s infinite;">開始遊戲</button>
+        </div>
+    </div>
+
+    <!-- 召喚兵種控制區 (未開始時加 class 禁用) -->
+    <div class="spawn-panel disabled-before-start" id="spawn-panel">
+        <div class="spawn-btn disabled" id="btn-spawn-aaa" onclick="spawnUnit('aaa')">
+            <div class="spawn-name">AAA 守衛</div>
+            <div class="spawn-desc">三態同形 (如 cut)<br>近戰・低消耗</div>
+            <div class="spawn-cost">🪙 50</div>
+            <div class="cooldown-mask" id="cd-mask-aaa">0.0s</div>
+        </div>
+        <div class="spawn-btn disabled" id="btn-spawn-aba" onclick="spawnUnit('aba')">
+            <div class="spawn-name">ABA 巡邏者</div>
+            <div class="spawn-desc">原形與分詞同形 (run)<br>中距射手・均勻</div>
+            <div class="spawn-cost">🪙 100</div>
+            <div class="cooldown-mask" id="cd-mask-aba">0.0s</div>
+        </div>
+        <div class="spawn-btn disabled" id="btn-spawn-abb" onclick="spawnUnit('abb')">
+            <div class="spawn-name">ABB 聖騎士</div>
+            <div class="spawn-desc">過去與分詞同形 (buy)<br>高血量・重型肉盾</div>
+            <div class="spawn-cost">🪙 200</div>
+            <div class="cooldown-mask" id="cd-mask-abb">0.0s</div>
+        </div>
+    </div>
+
+    <div class="intro-banner">
+        💡 <b>遊戲說明</b>：隨時間僅獲得極少金幣。<b>答對上方問題能快速獲得 150 金幣</b>！<br>
+        召喚文法戰士擊敗右方拼寫錯誤 (如 goed, costed) 的文法魔獸，摧毀敵方的「混亂語意城堡」即可獲勝！
+    </div>
+</div>
+
+<!-- 遊戲結束彈窗 -->
+<div class="modal" id="game-over-modal">
+    <div class="modal-content" id="modal-theme">
+        <div class="modal-title" id="modal-title">勝利！</div>
+        <div class="modal-desc" id="modal-desc">您成功的守護了文法世界！</div>
+        <button class="restart-btn" onclick="resetGame()">再次挑戰</button>
+    </div>
+</div>
+
+<script>
+// ==========================================
+// 題庫資料定義 (請在此處修改或新增教學題目)
+// ==========================================
+const QUIZ_BANK = [
+    { question: "請問動詞 'cut' (割) 的過去式與過去分詞是？", options: ["cut / cut", "cutted / cutted", "cats / cutten", "cutting / cut"], correctAnswer: "cut / cut" },
+    { question: "請問動詞 'read' (讀) 的過去式與過去分詞是？", options: ["read / read", "readed / readed", "red / red", "read / readen"], correctAnswer: "read / read" },
+    { question: "請問動詞 'cost' (花費) 的過去式與過去分詞是？", options: ["cost / cost", "costed / costed", "cost / costen", "coasts / coast"], correctAnswer: "cost / cost" },
+    { question: "請問動詞 'hit' (打) 的過去式與過去分詞是？", options: ["hit / hit", "hitted / hitted", "hot / hot", "hit / hitten"], correctAnswer: "hit / hit" },
+    { question: "請問動詞 'hurt' (傷害) 的過去式與過去分詞是？", options: ["hurt / hurt", "hurted / hurted", "hurts / hurten", "hart / hart"], correctAnswer: "hurt / hurt" },
+    
+    { question: "請問動詞 'become' (變成) 的過去式與過去分詞是？", options: ["became / become", "become / became", "became / became", "becomed / becomed"], correctAnswer: "became / become" },
+    { question: "請問動詞 'run' (跑) 的過去式與過去分詞是？", options: ["ran / run", "runned / run", "ran / ran", "run / ran"], correctAnswer: "ran / run" },
+    { question: "請問動詞 'come' (來) 的過去式與過去分詞是？", options: ["came / come", "come / came", "came / came", "comed / comed"], correctAnswer: "came / come" },
+    
+    { question: "請問動詞 'catch' (抓) 的過去式與過去分詞是？", options: ["caught / caught", "catched / catched", "caught / caughten", "cought / cought"], correctAnswer: "caught / caught" },
+    { question: "請問動詞 'teach' (教) 的過去式與過去分詞是？", options: ["taught / taught", "teached / teached", "taught / taughten", "thought / thought"], correctAnswer: "taught / taught" },
+    { question: "請問動詞 'buy' (買) 的過去式與過去分詞是？", options: ["bought / bought", "buyed / buyed", "brought / brought", "boughten / boughten"], correctAnswer: "bought / bought" },
+    { question: "請問動詞 'bring' (帶來) 的過去式與過去分詞是？", options: ["brought / brought", "bringed / bringed", "bought / bought", "broughten / broughten"], correctAnswer: "brought / brought" },
+    { question: "請問動詞 'think' (想) 的過去式與過去分詞是？", options: ["thought / thought", "thinked / thinked", "thoughten / thoughten", "taught / taught"], correctAnswer: "thought / thought" },
+    { question: "請問動詞 'sell' (賣) 的過去式與過去分詞是？", options: ["sold / sold", "selled / selled", "solden / solden", "sale / sale"], correctAnswer: "sold / sold" },
+    { question: "請問動詞 'tell' (告訴) 的過去式與過去分詞是？", options: ["told / told", "telled / telled", "tolden / tolden", "tale / tale"], correctAnswer: "told / told" },
+    { question: "請問動詞 'win' (贏) 的過去式與過去分詞是？", options: ["won / won", "winned / winned", "won / wonen", "wan / wan"], correctAnswer: "won / won" },
+    { question: "請問動詞 'forget' (忘記) 的過去式與過去分詞是？", options: ["forgot / forgot", "forgot / forgotten", "forgotten / forgotten", "forgetted / forgetted"], correctAnswer: "forgot / forgot" },
+    { question: "請問動詞 'find' (找到) 的過去式與過去分詞是？", options: ["found / found", "finded / finded", "founden / founden", "fond / fond"], correctAnswer: "found / found" },
+    { question: "請問動詞 'understand' (理解) 的過去式與過去分詞是？", options: ["understood / understood", "understanded / understanded", "understood / understooden", "understands / understool"], correctAnswer: "understood / understood" },
+    { question: "請問動詞 'sleep' (睡覺) 的過去式與過去分詞是？", options: ["slept / slept", "sleeped / sleeped", "slept / slepten", "slip / slip"], correctAnswer: "slept / slept" }
+];
+
+// ==========================================
+// 遊戲全域狀態與配置
+// ==========================================
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+let gameStarted = false; // 控制遊戲是否已經開始
+let gameRunning = true;
+let coins = 100;
+let lastTime = 0;
+let spawnTimer = 0;
+
+// 城堡（基地）配置
+let playerBase = { x: 50, y: 190, width: 70, height: 110, hp: 1000, maxHp: 1000 };
+let enemyBase = { x: 680, y: 190, width: 70, height: 110, hp: 1000, maxHp: 1000 };
+
+// 兵種配置表 (AAA, ABA, ABB)
+const UNIT_CONFIG = {
+    aaa: { name: "AAA 守衛", hp: 150, maxHp: 150, cost: 50, speed: 1.2, range: 25, damage: 15, cd: 3000, lastSpawn: 0, color: '#3498db' },
+    aba: { name: "ABA 巡邏者", hp: 100, maxHp: 100, cost: 100, speed: 1.0, range: 120, damage: 20, cd: 5000, lastSpawn: 0, color: '#2ecc71' },
+    abb: { name: "ABB 聖騎士", hp: 350, maxHp: 350, cost: 200, speed: 0.7, range: 30, damage: 25, cd: 10000, lastSpawn: 0, color: '#9b59b6' }
+};
+
+// 敵方怪物配置表
+const ENEMY_CONFIGS = [
+    { type: 'goed', label: 'goed', hp: 80, maxHp: 80, speed: -0.9, range: 25, damage: 8, color: '#ff6b6b', radius: 15, coinReward: 15 },
+    { type: 'runned', label: 'runned', hp: 50, maxHp: 50, speed: -1.5, range: 20, damage: 12, color: '#ff4757', radius: 12, coinReward: 15 },
+    { type: 'costed', label: 'costed', hp: 160, maxHp: 160, speed: -0.6, range: 30, damage: 18, color: '#ff7f50', radius: 18, coinReward: 25 },
+    { type: 'catched', label: 'catched', hp: 300, maxHp: 300, speed: -0.4, range: 35, damage: 30, color: '#e84118', radius: 22, coinReward: 50 }
+];
+
+let playerUnits = [];
+let enemyUnits = [];
+let projectiles = [];
+let particles = [];
+
+// 問答狀態
+let currentQuiz = null;
+let quizCooldownActive = false;
+let quizCooldownTime = 0;
+
+// ==========================================
+// 系統初始化與事件綁定
+// ==========================================
+window.onload = function() {
+    // 預先繪製靜態畫面（玩家能先看到城堡與背景）
+    renderGame();
+    requestAnimationFrame(gameLoop);
+};
+
+// 點擊「開始遊戲」執行
+function startGame() {
+    gameStarted = true;
+    
+    // 隱藏開始畫面
+    document.getElementById('start-screen').style.display = 'none';
+    
+    // 顯示戰鬥畫面的金幣顯示浮窗
+    document.getElementById('coin-display').style.display = 'block';
+    
+    // 移除未開始時的禁用狀態
+    document.getElementById('quiz-panel').classList.remove('disabled-before-start');
+    document.getElementById('spawn-panel').classList.remove('disabled-before-start');
+    
+    // 初始化題目
+    initQuiz();
+    updateCoinsDisplay();
+}
+
+// ==========================================
+// 答題系統邏輯 (QuizManager)
+// ==========================================
+function initQuiz() {
+    if (!gameStarted || quizCooldownActive) return;
+    
+    // 隨機抽選題目
+    const randomIndex = Math.floor(Math.random() * QUIZ_BANK.length);
+    currentQuiz = QUIZ_BANK[randomIndex];
+    
+    document.getElementById('question-text').innerText = currentQuiz.question;
+    const optionsContainer = document.getElementById('options-container');
+    optionsContainer.innerHTML = '';
+    
+    // 隨機打亂選項
+    const shuffledOptions = [...currentQuiz.options].sort(() => Math.random() - 0.5);
+    
+    shuffledOptions.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.className = 'option-btn';
+        btn.innerText = opt;
+        btn.onclick = () => checkAnswer(opt, btn);
+        optionsContainer.appendChild(btn);
+    });
+}
+
+function checkAnswer(selectedOption, buttonElement) {
+    if (!gameStarted || quizCooldownActive) return;
+    
+    const buttons = document.querySelectorAll('#options-container .option-btn');
+    buttons.forEach(btn => btn.disabled = true);
+    
+    if (selectedOption === currentQuiz.correctAnswer) {
+        // 答對邏輯
+        buttonElement.classList.add('correct');
+        addCoins(150);
+        
+        // 浮動飛出金幣效果
+        const rect = buttonElement.getBoundingClientRect();
+        createFloatingText(`+💰150`, rect.left + rect.width / 2, rect.top);
+        
+        // 答對可直接進入下一題
+        setTimeout(() => {
+            initQuiz();
+        }, 800);
+    } else {
+        // 答錯邏輯
+        buttonElement.classList.add('wrong');
+        
+        // 標記正確答案給玩家看
+        buttons.forEach(btn => {
+            if (btn.innerText === currentQuiz.correctAnswer) {
+                btn.classList.add('correct');
+            }
+        });
+        
+        // 鎖定答題區
+        triggerQuizCooldown();
+    }
+}
+
+function triggerQuizCooldown() {
+    quizCooldownActive = true;
+    quizCooldownTime = 3; // 3 秒冷卻時間
+    const overlay = document.getElementById('quiz-cooldown');
+    const timerText = document.getElementById('quiz-cooldown-timer');
+    const msgText = document.getElementById('quiz-cooldown-msg');
+    
+    msgText.innerText = `答錯了！正確答案是: 「${currentQuiz.correctAnswer}」`;
+    overlay.style.display = 'flex';
+    timerText.innerText = quizCooldownTime;
+    
+    const interval = setInterval(() => {
+        quizCooldownTime--;
+        timerText.innerText = quizCooldownTime;
+        if (quizCooldownTime <= 0) {
+            clearInterval(interval);
+            overlay.style.display = 'none';
+            quizCooldownActive = false;
+            initQuiz(); // 重整題目
+        }
+    }, 1000);
+}
+
+function addCoins(amount) {
+    coins += amount;
+    updateCoinsDisplay();
+}
+
+function updateCoinsDisplay() {
+    document.getElementById('coin-display').innerHTML = `💰 金幣: ${Math.floor(coins)}`;
+}
+
+// 建立網頁浮動文字動畫效果
+function createFloatingText(text, x, y) {
+    const el = document.createElement('div');
+    el.className = 'floating-text';
+    el.innerText = text;
+    el.style.left = `${x}px`;
+    el.style.top = `${y}px`;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 800);
+}
+
+// ==========================================
+// 召喚與兵種發兵邏輯
+// ==========================================
+function spawnUnit(type) {
+    if (!gameStarted || !gameRunning) return;
+    
+    const config = UNIT_CONFIG[type];
+    const now = Date.now();
+    
+    if (coins >= config.cost && now - config.lastSpawn >= config.cd) {
+        coins -= config.cost;
+        updateCoinsDisplay();
+        config.lastSpawn = now;
+        
+        // 建立我方戰士實體
+        const unit = {
+            id: 'p_' + now + '_' + Math.random(),
+            type: type,
+            name: config.name,
+            x: playerBase.x + playerBase.width,
+            y: 260 + (Math.random() * 20 - 10), // 隨機少許上下偏移增加真實感
+            hp: config.hp,
+            maxHp: config.maxHp,
+            speed: config.speed,
+            range: config.range,
+            damage: config.damage,
+            color: config.color,
+            attackCooldown: 0,
+            attackInterval: 1200, // 攻擊冷卻 ms
+            size: type === 'abb' ? 18 : 12,
+            target: null,
+            state: 'move' // move, attack
+        };
+        playerUnits.push(unit);
+    }
+}
+
+// 控制按鈕冷卻渲染與是否可用狀態
+function updateSpawnButtons() {
+    if (!gameStarted) return;
+    const now = Date.now();
+    for (let key in UNIT_CONFIG) {
+        const config = UNIT_CONFIG[key];
+        const btn = document.getElementById(`btn-spawn-${key}`);
+        const mask = document.getElementById(`cd-mask-${key}`);
+        
+        const cdRemaining = Math.max(0, config.cd - (now - config.lastSpawn));
+        
+        // 處理冷卻遮罩顯示
+        if (cdRemaining > 0) {
+            btn.classList.add('on-cooldown');
+            mask.innerText = `${(cdRemaining / 1000).toFixed(1)}s`;
+        } else {
+            btn.classList.remove('on-cooldown');
+        }
+        
+        // 處理金幣不足與解鎖狀態
+        if (coins >= config.cost && cdRemaining === 0) {
+            btn.classList.remove('disabled');
+        } else {
+            btn.classList.add('disabled');
+        }
+    }
+}
+
+// ==========================================
+// 遊戲核心邏輯引擎 (GameEngine)
+// ==========================================
+function gameLoop(timestamp) {
+    if (!lastTime) lastTime = timestamp;
+    const deltaTime = timestamp - lastTime;
+    lastTime = timestamp;
+
+    if (gameStarted && gameRunning) {
+        // 1. 被動極少金幣增長 (每秒增加 2 金幣)
+        coins += 2 * (deltaTime / 1000);
+        updateCoinsDisplay();
+        
+        // 2. 自動產出敵人邏輯
+        spawnTimer += deltaTime;
+        if (spawnTimer > 4000) { // 每 4 秒隨機產生一波敵人
+            spawnTimer = 0;
+            spawnEnemyRandomly();
+        }
+
+        // 3. 物理與戰鬥運算
+        updateGameObjects(deltaTime);
+    }
+
+    // 4. Canvas 圖形繪製
+    renderGame();
+    
+    // 5. 按鈕狀態更新
+    if (gameStarted) {
+        updateSpawnButtons();
+    }
+
+    requestAnimationFrame(gameLoop);
+}
+
+// 隨機產生敵方單位
+function spawnEnemyRandomly() {
+    const rand = Math.random();
+    let config = ENEMY_CONFIGS[0];
+    
+    if (rand > 0.9) {
+        config = ENEMY_CONFIGS[3]; // catched (Boss)
+    } else if (rand > 0.65) {
+        config = ENEMY_CONFIGS[2]; // costed
+    } else if (rand > 0.35) {
+        config = ENEMY_CONFIGS[1]; // runned
+    }
+    
+    const enemy = {
+        id: 'e_' + Date.now() + '_' + Math.random(),
+        type: config.type,
+        label: config.label,
+        x: enemyBase.x,
+        y: 260 + (Math.random() * 20 - 10),
+        hp: config.hp,
+        maxHp: config.maxHp,
+        speed: config.speed,
+        range: config.range,
+        damage: config.damage,
+        color: config.color,
+        radius: config.radius,
+        coinReward: config.coinReward,
+        attackCooldown: 0,
+        attackInterval: 1200,
+        state: 'move'
+    };
+    enemyUnits.push(enemy);
+}
+
+// 物理、移動與戰鬥狀態運算
+function updateGameObjects(deltaTime) {
+    // 1. 玩家單位狀態運算
+    playerUnits.forEach(p => {
+        // 偵測前方最近之敵人
+        let nearestEnemy = null;
+        let minDistance = Infinity;
+        
+        enemyUnits.forEach(e => {
+            let dist = e.x - p.x;
+            if (dist > 0 && dist < minDistance) {
+                minDistance = dist;
+                nearestEnemy = e;
+            }
+        });
+        
+        // 如果沒有單位，則偵測敵人城堡
+        let baseDist = enemyBase.x - p.x;
+        
+        if (nearestEnemy && minDistance <= p.range) {
+            // 進入攻擊狀態
+            p.state = 'attack';
+            if (p.attackCooldown <= 0) {
+                p.attackCooldown = p.attackInterval;
+                performAttack(p, nearestEnemy, deltaTime);
+            }
+        } else if (baseDist <= p.range) {
+            // 攻擊敵人城堡
+            p.state = 'attack';
+            if (p.attackCooldown <= 0) {
+                p.attackCooldown = p.attackInterval;
+                performAttack(p, enemyBase, deltaTime);
+            }
+        } else {
+            // 移動狀態
+            p.state = 'move';
+            p.x += p.speed * (deltaTime / 16.6); // 乘以基調系數，使之對齊幀率
+        }
+        
+        if (p.attackCooldown > 0) {
+            p.attackCooldown -= deltaTime;
+        }
+    });
+
+    // 2. 敵方單位狀態運算
+    enemyUnits.forEach(e => {
+        // 偵測前方最近之我方玩家單位
+        let nearestPlayer = null;
+        let minDistance = Infinity;
+        
+        playerUnits.forEach(p => {
+            let dist = e.x - p.x;
+            if (dist > 0 && dist < minDistance) {
+                minDistance = dist;
+                nearestPlayer = p;
+            }
+        });
+        
+        // 如果沒有單位，則偵測玩家城堡
+        let baseDist = e.x - (playerBase.x + playerBase.width);
+        
+        if (nearestPlayer && minDistance <= e.range) {
+            // 進入攻擊狀態
+            e.state = 'attack';
+            if (e.attackCooldown <= 0) {
+                e.attackCooldown = e.attackInterval;
+                performAttack(e, nearestPlayer, deltaTime);
+            }
+        } else if (baseDist <= e.range) {
+            // 攻擊玩家城堡
+            e.state = 'attack';
+            if (e.attackCooldown <= 0) {
+                e.attackCooldown = e.attackInterval;
+                performAttack(e, playerBase, deltaTime);
+            }
+        } else {
+            // 移動狀態
+            e.state = 'move';
+            e.x += e.speed * (deltaTime / 16.6); // 速度是負數，故往左移動
+        }
+        
+        if (e.attackCooldown > 0) {
+            e.attackCooldown -= deltaTime;
+        }
+    });
+
+    // 3. 處理遠程子彈物理 (主要給 ABA 使用)
+    projectiles.forEach((proj, idx) => {
+        proj.x += proj.vx * (deltaTime / 16.6);
+        proj.y += proj.vy * (deltaTime / 16.6);
+        
+        // 判定碰撞目標
+        let targetX = proj.target.x;
+        let dist = Math.abs(proj.x - targetX);
+        if (dist < 10) {
+            // 命中目標，扣血
+            proj.target.hp -= proj.damage;
+            createHitEffect(proj.x, proj.y, proj.target.color);
+            projectiles.splice(idx, 1);
+        }
+    });
+
+    // 4. 清理血量歸零的死亡實體 (生死判定)
+    playerUnits = playerUnits.filter(p => {
+        if (p.hp <= 0) {
+            createDestroyEffect(p.x, p.y, p.color);
+            return false;
+        }
+        return true;
+    });
+
+    enemyUnits = enemyUnits.filter(e => {
+        if (e.hp <= 0) {
+            createDestroyEffect(e.x, e.y, e.color);
+            coins += e.coinReward; // 擊殺獎勵金幣
+            updateCoinsDisplay();
+            return false;
+        }
+        return true;
+    });
+
+    // 5. 粒子物理更新
+    particles.forEach((part, idx) => {
+        part.x += part.vx;
+        part.y += part.vy;
+        part.vy += 0.2; // 重力模擬
+        part.life -= deltaTime;
+        if (part.life <= 0) {
+            particles.splice(idx, 1);
+        }
+    });
+
+    // 6. 勝負判定
+    if (playerBase.hp <= 0 && gameRunning) {
+        showGameOver(false);
+    } else if (enemyBase.hp <= 0 && gameRunning) {
+        showGameOver(true);
+    }
+}
+
+// 實作攻擊與子彈生成
+function performAttack(attacker, defender, deltaTime) {
+    if (attacker.type === 'aba') {
+        // 遠程攻擊：生成射擊投射物
+        const proj = {
+            x: attacker.x,
+            y: attacker.y - 10,
+            target: defender,
+            vx: 5,
+            vy: -1.5,
+            damage: attacker.damage
+        };
+        projectiles.push(proj);
+    } else {
+        // 近戰直接造成傷害
+        defender.hp -= attacker.damage;
+        createHitEffect(defender.x + (defender.width ? defender.width / 2 : 0), defender.y + (defender.height ? -20 : 0), defender.color || '#fff');
+    }
+}
+
+// ==========================================
+// 攻擊特效與粒子效果
+// ==========================================
+function createHitEffect(x, y, color) {
+    // 產生受擊火花
+    for (let i = 0; i < 6; i++) {
+        particles.push({
+            x: x,
+            y: y,
+            vx: (Math.random() * 4 - 2),
+            vy: (Math.random() * -4 - 1),
+            color: color,
+            life: 300 + Math.random() * 200,
+            size: 2 + Math.random() * 3
+        });
+    }
+}
+
+function createDestroyEffect(x, y, color) {
+    // 產生消散大量粒子
+    for (let i = 0; i < 15; i++) {
+        particles.push({
+            x: x,
+            y: y,
+            vx: (Math.random() * 6 - 3),
+            vy: (Math.random() * -6 - 2),
+            color: color,
+            life: 600 + Math.random() * 400,
+            size: 3 + Math.random() * 4
+        });
+    }
+}
+
+// ==========================================
+// Canvas 渲染繪製邏輯
+// ==========================================
+function renderGame() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // 1. 繪製背景元素與地面
+    drawBackground();
+
+    // 2. 繪製兩方城堡 (Base)
+    drawBase(playerBase, true);  // 我方藍色
+    drawBase(enemyBase, false); // 敵方紅黑
+
+    // 3. 繪製我方所有單位
+    playerUnits.forEach(p => {
+        // 身體
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        let bounce = p.state === 'move' ? Math.sin(Date.now() / 100) * 3 : 0;
+        ctx.arc(p.x, p.y + bounce, p.size, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 眼睛
+        ctx.fillStyle = '#fff';
+        ctx.beginPath();
+        ctx.arc(p.x + p.size/2 - 2, p.y - 3 + bounce, 4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#000';
+        ctx.beginPath();
+        ctx.arc(p.x + p.size/2 - 1, p.y - 3 + bounce, 2, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 畫兵種的類別標示 text
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 9px Outfit';
+        ctx.textAlign = 'center';
+        ctx.fillText(p.type.toUpperCase(), p.x, p.y - p.size - 12);
+
+        // 繪製血條
+        drawHealthBar(p.x - 15, p.y - p.size - 8, 30, 4, p.hp, p.maxHp);
+    });
+
+    // 4. 繪製敵方所有單位
+    enemyUnits.forEach(e => {
+        // 繪製怪物身體 (不規則形狀顯得混亂)
+        ctx.fillStyle = e.color;
+        ctx.beginPath();
+        let shake = e.state === 'move' ? Math.sin(Date.now() / 80) * 2 : 0;
+        ctx.arc(e.x, e.y + shake, e.radius, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 敵方惡魔之眼
+        ctx.fillStyle = '#fff';
+        ctx.beginPath();
+        ctx.arc(e.x - e.radius/3, e.y - 4 + shake, 5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#e74c3c';
+        ctx.beginPath();
+        ctx.arc(e.x - e.radius/3 - 1, e.y - 4 + shake, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 顯示錯誤的拼寫單字 (讓學生一眼看出是文法錯誤)
+        ctx.fillStyle = '#ff7675';
+        ctx.font = 'bold 11px Outfit';
+        ctx.textAlign = 'center';
+        ctx.fillText(e.label, e.x, e.y - e.radius - 12);
+
+        // 繪製血條
+        drawHealthBar(e.x - 15, e.y - e.radius - 8, 30, 4, e.hp, e.maxHp);
+    });
+
+    // 5. 繪製子彈投射物
+    ctx.fillStyle = '#f1c40f';
+    projectiles.forEach(p => {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
+        ctx.fill();
+    });
+
+    // 6. 繪製爆炸與受擊粒子
+    particles.forEach(p => {
+        ctx.fillStyle = p.color;
+        ctx.globalAlpha = Math.max(0, p.life / 1000);
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fill();
+    });
+    ctx.globalAlpha = 1.0; // 恢復透明度
+}
+
+// 繪製地平線與樹木等背景
+function drawBackground() {
+    // 繪製地面
+    ctx.fillStyle = '#1e302f';
+    ctx.fillRect(0, 270, canvas.width, 50);
+    ctx.fillStyle = '#263b3a';
+    ctx.fillRect(0, 270, canvas.width, 3);
+    
+    // 繪製一些背景山脈 / 微光剪影
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.02)';
+    ctx.beginPath();
+    ctx.moveTo(0, 270);
+    ctx.lineTo(100, 180);
+    ctx.lineTo(250, 270);
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.moveTo(300, 270);
+    ctx.lineTo(450, 150);
+    ctx.lineTo(600, 270);
+    ctx.fill();
+}
+
+// 繪製城堡樣式
+function drawBase(base, isPlayer) {
+    ctx.shadowBlur = 15;
+    ctx.shadowColor = isPlayer ? '#00f2fe' : '#e84118';
+    
+    ctx.fillStyle = isPlayer ? '#1b2f4a' : '#331d27';
+    ctx.fillRect(base.x, base.y, base.width, base.height);
+    
+    // 畫屋頂與裝飾
+    ctx.fillStyle = isPlayer ? '#00f2fe' : '#e84118';
+    ctx.fillRect(base.x - 5, base.y - 15, base.width + 10, 15);
+    
+    // 城堡名稱
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 12px Noto Sans TC';
+    ctx.textAlign = 'center';
+    ctx.fillText(isPlayer ? "文法堡壘" : "混亂城堡", base.x + base.width/2, base.y - 25);
+    
+    ctx.shadowBlur = 0; // 取消陰影避免效能影響
+
+    // 城堡大血條
+    drawHealthBar(base.x - 15, base.y + base.height + 8, base.width + 30, 8, base.hp, base.maxHp);
+}
+
+// 通用血條繪製工具
+function drawHealthBar(x, y, w, h, val, maxVal) {
+    if (val < 0) val = 0;
+    let ratio = val / maxVal;
+    
+    // 背景
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+    ctx.fillRect(x, y, w, h);
+    
+    // 血條剩餘顏色
+    ctx.fillStyle = ratio > 0.5 ? '#2ecc71' : ratio > 0.2 ? '#f1c40f' : '#e74c3c';
+    ctx.fillRect(x, y, w * ratio, h);
+    
+    // 外框線
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+    ctx.strokeRect(x, y, w, h);
+}
+
+// ==========================================
+// 勝負判定與介面彈窗
+// ==========================================
+function showGameOver(isWin) {
+    gameRunning = false;
+    const modal = document.getElementById('game-over-modal');
+    const modalTheme = document.getElementById('modal-theme');
+    const title = document.getElementById('modal-title');
+    const desc = document.getElementById('modal-desc');
+    
+    modal.style.display = 'flex';
+    if (isWin) {
+        modalTheme.className = 'modal-content win';
+        title.innerText = '🎉 勝利！';
+        desc.innerText = '您成功的以正確的動詞三態文法消滅了所有錯字魔獸，保衛了知識殿堂！';
+    } else {
+        modalTheme.className = 'modal-content lose';
+        title.innerText = '💀 敗北...';
+        desc.innerText = '混亂的英文錯字大軍摧毀了您的文法防線。請再次挑戰以鍛鍊您的英文三態！';
+    }
+}
+
+function resetGame() {
+    // 重置所有狀態
+    gameStarted = true; // 重玩時直接開始
+    gameRunning = true;
+    coins = 100;
+    playerBase.hp = playerBase.maxHp;
+    enemyBase.hp = enemyBase.maxHp;
+    playerUnits = [];
+    enemyUnits = [];
+    projectiles = [];
+    particles = [];
+    spawnTimer = 0;
+    
+    document.getElementById('game-over-modal').style.display = 'none';
+    document.getElementById('start-screen').style.display = 'none';
+    document.getElementById('coin-display').style.display = 'block'; // 確保顯示
+    document.getElementById('quiz-panel').classList.remove('disabled-before-start');
+    document.getElementById('spawn-panel').classList.remove('disabled-before-start');
+    
+    // 解鎖冷卻
+    UNIT_CONFIG.aaa.lastSpawn = 0;
+    UNIT_CONFIG.aba.lastSpawn = 0;
+    UNIT_CONFIG.abb.lastSpawn = 0;
+    
+    updateCoinsDisplay();
+    initQuiz();
+}
+</script>
+</body>
+</html>

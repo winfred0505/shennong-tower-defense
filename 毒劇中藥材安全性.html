@@ -1,0 +1,2280 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>神農禦邪傳：毒劇中藥安全性守護戰</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #2ecc71;
+            --primary-glow: rgba(46, 204, 113, 0.4);
+            --danger: #e74c3c;
+            --danger-glow: rgba(231, 76, 60, 0.4);
+            --warning: #f1c40f;
+            --warning-glow: rgba(241, 196, 15, 0.4);
+            --accent: #9b59b6;
+            --accent-glow: rgba(155, 89, 182, 0.4);
+            --dark-bg: #0f1411;
+            --panel-bg: rgba(20, 28, 24, 0.85);
+            --card-bg: rgba(255, 255, 255, 0.04);
+            --text-color: #e2f0e9;
+            --text-muted: #8fa096;
+            --border-color: rgba(46, 204, 113, 0.25);
+            --font-main: 'Noto Sans TC', sans-serif;
+            --font-title: 'Outfit', 'Noto Sans TC', sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
+
+        body {
+            background-color: var(--dark-bg);
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(30, 61, 47, 0.2) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(60, 30, 61, 0.15) 0%, transparent 40%),
+                linear-gradient(rgba(15, 20, 17, 0.96), rgba(15, 20, 17, 0.96)),
+                url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M40 0l40 40-40 40L0 40z' fill='%232ecc71' fill-opacity='0.015' fill-rule='evenodd'/%3E%3C/svg%3E");
+            color: var(--text-color);
+            font-family: var(--font-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow: hidden;
+            padding: 10px;
+        }
+
+        /* 頂部 HUD 欄 */
+        header {
+            width: 100%;
+            max-width: 1100px;
+            display: grid;
+            grid-template-columns: 1.2fr 1.5fr 1.3fr;
+            align-items: center;
+            padding: 8px 16px;
+            margin-bottom: 8px;
+            background: var(--panel-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+            gap: 15px;
+        }
+
+        .title-area h1 {
+            font-family: var(--font-title);
+            font-size: 1.35rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, #a8ff78 0%, #78ffd6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 2px 10px rgba(120, 255, 214, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .title-area h1::before {
+            content: "🌿";
+        }
+
+        .title-area p {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        /* 城堡血量 HUD */
+        .castle-hps-hud {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            background: rgba(0, 0, 0, 0.25);
+            padding: 6px 12px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .hud-hp-col {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        .hp-bar-outer {
+            width: 90px;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .hp-bar-inner {
+            height: 100%;
+            width: 100%;
+            transition: width 0.3s ease;
+        }
+
+        .hp-bar-inner.player {
+            background: var(--primary);
+            box-shadow: 0 0 6px var(--primary-glow);
+        }
+
+        .hp-bar-inner.enemy {
+            background: var(--danger);
+            box-shadow: 0 0 6px var(--danger-glow);
+        }
+
+        /* 右側 HUD 數值與按鈕 */
+        .stats-top {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 10px;
+            font-family: var(--font-title);
+        }
+
+        .stat-badge {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 5px 12px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .stat-badge span.value {
+            color: var(--primary);
+            text-shadow: 0 0 8px var(--primary-glow);
+        }
+
+        #gold-display span.value {
+            color: var(--warning);
+            text-shadow: 0 0 8px var(--warning-glow);
+        }
+
+        .help-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+            padding: 5px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-family: var(--font-main);
+            font-size: 0.8rem;
+            font-weight: 700;
+            transition: all 0.2s;
+            outline: none;
+        }
+
+        .help-btn:hover {
+            background: rgba(46, 204, 113, 0.2);
+            border-color: var(--primary);
+        }
+
+        /* 主容器 */
+        main {
+            width: 100%;
+            max-width: 1100px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            flex-grow: 1;
+        }
+
+        /* 戰鬥畫布區域 */
+        .battle-container {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+            aspect-ratio: 3.6 / 1;
+            max-height: 250px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        /* 下方並排版面 (答題區 + 控制召喚區) */
+        .bottom-layout {
+            display: grid;
+            grid-template-columns: 1.35fr 1fr;
+            gap: 8px;
+            align-items: stretch;
+            flex-grow: 1;
+        }
+
+        /* 答題區域 */
+        .question-card {
+            background: var(--panel-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 12px 16px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            justify-content: space-between;
+        }
+
+        .question-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(46, 204, 113, 0.1);
+            padding-bottom: 4px;
+        }
+
+        .question-tag {
+            background: rgba(46, 204, 113, 0.15);
+            color: var(--primary);
+            border: 1px solid var(--primary);
+            font-size: 0.7rem;
+            padding: 1px 6px;
+            border-radius: 4px;
+            font-weight: 700;
+        }
+
+        .cooldown-text {
+            font-size: 0.75rem;
+            color: var(--danger);
+            font-weight: 600;
+            display: none;
+        }
+
+        .question-text {
+            font-size: 0.95rem;
+            font-weight: 700;
+            line-height: 1.4;
+            color: #ffffff;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+        }
+
+        .option-btn {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 8px 12px;
+            color: var(--text-color);
+            font-family: var(--font-main);
+            font-size: 0.85rem;
+            font-weight: 500;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            outline: none;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            background: rgba(46, 204, 113, 0.08);
+            border-color: var(--primary);
+            transform: translateY(-1px);
+        }
+
+        .option-btn span.prefix {
+            font-family: var(--font-title);
+            font-weight: 800;
+            color: var(--primary);
+            background: rgba(46, 204, 113, 0.1);
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            flex-shrink: 0;
+            font-size: 0.75rem;
+        }
+
+        .option-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .option-btn.correct {
+            background: rgba(46, 204, 113, 0.25) !important;
+            border-color: #2ecc71 !important;
+            color: #ffffff !important;
+        }
+
+        .option-btn.correct span.prefix {
+            background: #2ecc71;
+            color: #ffffff;
+        }
+
+        .option-btn.wrong {
+            background: rgba(231, 76, 60, 0.25) !important;
+            border-color: #e74c3c !important;
+            color: #ffffff !important;
+            animation: shake 0.4s ease;
+        }
+
+        .option-btn.wrong span.prefix {
+            background: #e74c3c;
+            color: #ffffff;
+        }
+
+        /* 答錯時顯示正確選項為黃色 (新要求) */
+        .option-btn.answer-correct-highlight {
+            background: rgba(241, 196, 15, 0.25) !important;
+            border-color: #f1c40f !important;
+            color: #ffffff !important;
+            box-shadow: 0 0 10px rgba(241, 196, 15, 0.2);
+        }
+
+        .option-btn.answer-correct-highlight span.prefix {
+            background: #f1c40f;
+            color: #000000;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-4px); }
+            40%, 80% { transform: translateX(4px); }
+        }
+
+        /* 解析面板 */
+        .explanation-panel {
+            background: rgba(0, 0, 0, 0.3);
+            border-left: 3px solid var(--warning);
+            border-radius: 6px;
+            padding: 8px 12px;
+            font-size: 0.8rem;
+            line-height: 1.4;
+            color: var(--warning);
+            display: none;
+            max-height: 80px;
+            overflow-y: auto;
+        }
+
+        .explanation-panel strong {
+            display: block;
+            margin-bottom: 2px;
+        }
+
+        .cooldown-bar-container {
+            width: 100%;
+            height: 3px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 2px;
+            overflow: hidden;
+            display: none;
+        }
+
+        .cooldown-bar {
+            height: 100%;
+            width: 0%;
+            background: var(--danger);
+        }
+
+        /* 召喚控制面板 */
+        .control-panel {
+            background: var(--panel-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+            justify-content: center;
+        }
+
+        .summon-deck {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 8px;
+            width: 100%;
+        }
+
+        .summon-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            padding: 8px 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.2s ease;
+        }
+
+        .summon-card:hover:not(.disabled) {
+            border-color: var(--primary);
+            background: rgba(46, 204, 113, 0.06);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(46, 204, 113, 0.15);
+        }
+
+        .summon-card.disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            filter: grayscale(1);
+        }
+
+        .summon-avatar {
+            font-size: 1.6rem;
+            filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.2));
+        }
+
+        .summon-info {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1px;
+        }
+
+        .summon-name {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        .summon-cost {
+            font-family: var(--font-title);
+            font-size: 0.75rem;
+            font-weight: 800;
+            color: var(--warning);
+            display: flex;
+            align-items: center;
+            gap: 1px;
+        }
+
+        .summon-cost::before {
+            content: "🪙";
+        }
+
+        /* 召喚冷卻 */
+        .card-cooldown {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.65);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font-title);
+            font-size: 1rem;
+            font-weight: 800;
+            color: #ffffff;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .summon-card.in-cooldown .card-cooldown {
+            opacity: 1;
+        }
+
+        .card-cooldown-progress {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 2px;
+            background: var(--primary);
+            width: 0%;
+        }
+
+        /* 結局與說明 Overlay */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(10, 15, 12, 0.92);
+            backdrop-filter: blur(6px);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease;
+        }
+
+        .overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-card {
+            background: rgba(20, 30, 24, 0.95);
+            border: 2px solid var(--border-color);
+            border-radius: 20px;
+            width: 90%;
+            max-width: 500px;
+            padding: 24px;
+            text-align: center;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.8);
+            transform: scale(0.92);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .overlay.active .modal-card {
+            transform: scale(1);
+        }
+
+        .modal-icon {
+            font-size: 3.5rem;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+
+        .modal-title {
+            font-family: var(--font-title);
+            font-size: 1.8rem;
+            font-weight: 900;
+        }
+
+        .modal-title.win {
+            background: linear-gradient(135deg, #a8ff78 0%, #78ffd6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .modal-title.lose {
+            background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .modal-desc {
+            font-size: 0.85rem;
+            line-height: 1.5;
+            color: var(--text-color);
+            margin: 5px 0;
+            text-align: left;
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.05);
+            padding: 12px;
+            border-radius: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+            width: 100%;
+        }
+
+        .modal-desc h3 {
+            color: var(--warning);
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.9rem;
+        }
+
+        .modal-desc li {
+            list-style-type: none;
+            position: relative;
+            padding-left: 14px;
+            margin-bottom: 4px;
+        }
+
+        .modal-desc li::before {
+            content: "✦";
+            position: absolute;
+            left: 0;
+            color: var(--primary);
+        }
+
+        .btn-action {
+            background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+            color: #ffffff;
+            border: none;
+            border-radius: 25px;
+            padding: 10px 30px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(46,204,113,0.3);
+            transition: all 0.2s ease;
+            outline: none;
+        }
+
+        .btn-action:hover {
+            transform: scale(1.04);
+            box-shadow: 0 6px 20px rgba(46,204,113,0.4);
+        }
+
+        @media (max-width: 768px) {
+            body {
+                overflow-y: auto;
+                height: auto;
+            }
+            header {
+                grid-template-columns: 1fr;
+                gap: 8px;
+            }
+            .bottom-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 開始畫面 Overlay -->
+    <div class="overlay active" id="welcome-overlay">
+        <div class="modal-card">
+            <div class="modal-icon">🌿</div>
+            <div class="modal-title win">神農禦邪傳</div>
+            <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: -8px;">毒劇中藥材安全性挑戰</p>
+            <div class="modal-desc">
+                <h3>🛡️ 遊戲背景與玩法規則</h3>
+                <p>邪惡病邪化身為「生川烏」、「生巴豆」與「禁用硃砂」侵襲百草堂！請指引神農軍擊退毒邪。</p>
+                <p style="margin-top: 6px;">1. 閱讀左下角**藥安知識問答**，點擊選項進行作答。</p>
+                <p>2. **答對可立即獲得 100 金幣**；答錯會顯示減毒與解毒解析，並<strong>處以 3 秒答題冷卻</strong>（正確選項會以<span style="color: var(--warning); font-weight: 700;">黃色</span>高亮標記）。</p>
+                <p>3. 消耗金幣在右下角召喚經過高溫炮製或具解毒屬性的中藥藥兵防守！</p>
+            </div>
+            <button class="btn-action" id="btn-start-game" style="font-size: 1.15rem; padding: 12px 40px; margin-top: 5px;">開始遊戲</button>
+        </div>
+    </div>
+
+    <!-- 頂部 HUD 列 -->
+    <header>
+        <div class="title-area">
+            <h1>神農禦邪傳</h1>
+            <p>答題防禦 · 毒劇中藥安全性</p>
+        </div>
+        
+        <!-- 城堡血條整合於 HUD 中 -->
+        <div class="castle-hps-hud">
+            <div class="hud-hp-col">
+                <span style="color: var(--primary);">百草堂 HP</span>
+                <div class="hp-bar-outer">
+                    <div class="hp-bar-inner player" id="player-hp-bar" style="width: 100%;"></div>
+                </div>
+            </div>
+            <div class="hud-hp-col">
+                <span style="color: var(--danger);">病邪巢 HP</span>
+                <div class="hp-bar-outer">
+                    <div class="hp-bar-inner enemy" id="enemy-hp-bar" style="width: 100%;"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="stats-top">
+            <div class="stat-badge" id="gold-display">
+                <span>金幣</span>
+                <span class="value" id="gold-val">100</span>
+            </div>
+            <div class="stat-badge">
+                <span>波次</span>
+                <span class="value" id="wave-val">1 / 3</span>
+            </div>
+            <button class="help-btn" id="btn-help">❓ 說明</button>
+        </div>
+    </header>
+
+    <!-- 遊戲主體 -->
+    <main>
+        <!-- 戰鬥 Canvas -->
+        <section class="battle-container" id="canvas-container">
+            <canvas id="gameCanvas"></canvas>
+        </section>
+
+        <!-- 下方並排區域 (答題 + 控制) -->
+        <div class="bottom-layout">
+            <!-- 答題與教學卡片 -->
+            <section class="question-card" id="q-card">
+                <div class="question-header">
+                    <span class="question-tag" id="q-tag">毒劇中藥知識</span>
+                    <div class="cooldown-text" id="cd-text">答錯冷卻中 (3秒)...</div>
+                </div>
+                <div class="question-text" id="q-text">
+                    點擊「開始遊戲」展開挑戰...
+                </div>
+                <div class="options-grid" id="options-container">
+                    <!-- 選項按鈕 -->
+                </div>
+                <div class="cooldown-bar-container" id="cd-bar-container">
+                    <div class="cooldown-bar" id="cd-bar"></div>
+                </div>
+                <div class="explanation-panel" id="exp-panel">
+                    <strong id="exp-title">💡 神農知識卡：</strong>
+                    <span id="exp-text"></span>
+                </div>
+            </section>
+
+            <!-- 召喚與操作面板 -->
+            <section class="control-panel">
+                <div class="summon-deck" id="deck-container">
+                    <!-- 赭鞭藥童 -->
+                    <div class="summon-card disabled" data-unit-id="apprentice" id="btn-apprentice">
+                        <span class="summon-avatar">🧑‍🌾</span>
+                        <div class="summon-info">
+                            <span class="summon-name">赭鞭藥童 (近戰)</span>
+                            <span class="summon-cost">50</span>
+                        </div>
+                        <div class="card-cooldown" id="cooldown-apprentice">0</div>
+                        <div class="card-cooldown-progress" id="progress-apprentice"></div>
+                    </div>
+                    <!-- 炮製藥師 -->
+                    <div class="summon-card disabled" data-unit-id="pharmacist" id="btn-pharmacist">
+                        <span class="summon-avatar">🧙‍♂️</span>
+                        <div class="summon-info">
+                            <span class="summon-name">炮製藥師 (水解減速)</span>
+                            <span class="summon-cost">100</span>
+                        </div>
+                        <div class="card-cooldown" id="cooldown-pharmacist">0</div>
+                        <div class="card-cooldown-progress" id="progress-pharmacist"></div>
+                    </div>
+                    <!-- 解毒綠豆兵 -->
+                    <div class="summon-card disabled" data-unit-id="bean" id="btn-bean">
+                        <span class="summon-avatar">🛡️</span>
+                        <div class="summon-info">
+                            <span class="summon-name">解毒綠豆兵 (坦克)</span>
+                            <span class="summon-cost">150</span>
+                        </div>
+                        <div class="card-cooldown" id="cooldown-bean">0</div>
+                        <div class="card-cooldown-progress" id="progress-bean"></div>
+                    </div>
+                    <!-- 神農化身 -->
+                    <div class="summon-card disabled" data-unit-id="shennong" id="btn-shennong">
+                        <span class="summon-avatar">👑</span>
+                        <div class="summon-info">
+                            <span class="summon-name">神農化身 (BOSS殺手)</span>
+                            <span class="summon-cost">300</span>
+                        </div>
+                        <div class="card-cooldown" id="cooldown-shennong">0</div>
+                        <div class="card-cooldown-progress" id="progress-shennong"></div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- 說明彈窗 Overlay -->
+    <div class="overlay" id="help-overlay">
+        <div class="modal-card">
+            <div class="modal-title win" style="font-size: 1.4rem;">🛡️ 兵種屬性與病邪檔案</div>
+            <div class="modal-desc" style="max-height: 280px;">
+                <h3 style="color: var(--primary);">友軍防衛兵種 (Player Units)</h3>
+                <p>🧑‍🌾 <strong>赭鞭藥童</strong>：快速近戰打擊，用於前線檢驗並壓制敵軍。</p>
+                <p>🧙‍♂️ <strong>炮製藥師</strong>：投擲炮製砂鍋。高溫水解生物鹼，減速敵軍 30% 並造成範圍傷害。</p>
+                <p>🛡️ <strong>解毒綠豆兵</strong>：綠豆甘草化身，具超高 HP，被動消除周圍同伴的中毒狀態。</p>
+                <p>👑 <strong>神農化身</strong>：高額近戰傷害，對巨型 Boss 有特傷，且被動治療周圍友軍。</p>
+                
+                <h3 style="color: var(--danger); margin-top: 10px;">敵方病邪檔案 (Enemy Units)</h3>
+                <p>👹 <strong>生川烏兵</strong>：含有劇毒雙酯型烏頭鹼，近戰攻擊力高、移動快。</p>
+                <p>🐗 <strong>生巴豆獸</strong>：含有巴豆油致瀉毒素，攻擊友軍會使其持續中毒扣血。</p>
+                <p>👾 <strong>生馬錢子怪</strong>：含有番木鱉鹼，射擊子彈會對友軍造成 1 秒眩暈麻痺。</p>
+                <p>🗿 <strong>硃砂禁忌魔 (Boss)</strong>：禁用重金屬汞害巨怪，血量與攻擊力極高，第 3 波 (100秒) 降臨。</p>
+            </div>
+            <button class="btn-action" id="btn-close-help">關閉說明</button>
+        </div>
+    </div>
+
+    <!-- 結局面板 Overlay -->
+    <div class="overlay" id="overlay">
+        <div class="modal-card">
+            <div class="modal-icon" id="modal-icon">🏆</div>
+            <div class="modal-title" id="modal-title">勝利！</div>
+            <div class="modal-desc" id="modal-desc">
+                <!-- 內容動態注入 -->
+            </div>
+            <button class="btn-action" id="btn-restart">重新守護</button>
+        </div>
+    </div>
+
+    <!-- 遊戲腳本 -->
+    <script>
+        /*************************************************************
+         * 1. 題庫資料陣列 (30 題完整資料庫)
+         *************************************************************/
+        const QUESTION_DATABASE = [
+            {
+                tag: "中藥基原與部位",
+                question: "中藥典收載的「川烏」與「附子」，其基原植物皆為毛茛科植物烏頭（Aconitum carmichaelii）。請問「川烏」是該植物的什麼部位？",
+                options: [
+                    "乾燥主根（母根）",
+                    "乾燥側根（子根）的加工品",
+                    "乾燥塊莖",
+                    "乾燥花蕾"
+                ],
+                correct: 0,
+                explanation: "川烏與附子源自同一種植物。其中「川烏」是其乾燥的主根（母根）；而「附子」則是其子根（側根），通常會經鹽漬或炮製加工製成鹽附子、黑順片等。"
+            },
+            {
+                tag: "化學成分與減毒",
+                question: "烏頭類中藥（川烏、草烏、附子）的主要劇毒成分為「雙酯型生物鹼」，臨床使用前通常需要經過何種方法以降低毒性？",
+                options: [
+                    "冷水浸泡 24 小時即可",
+                    "高溫長時間煎煮（先煎、久煎），使其水解為毒性極低的單酯型或無酯型生物鹼",
+                    "與硃砂同研，利用重金屬中和毒性",
+                    "與巴豆同煎，進行以毒攻毒"
+                ],
+                correct: 1,
+                explanation: "雙酯型生物鹼（如烏頭鹼）毒性極強。透過高溫煎煮（先煎、久煎），會使其水解為單酯型生物鹼（毒性降為1/50 - 1/500） or 無酯型生物鹼（毒性降為1/2000 - 1/4000），可達到減毒存效的效果。"
+            },
+            {
+                tag: "中藥配伍禁忌",
+                question: "根據中藥傳統配伍禁忌「十八反」，草烏（Aconiti Kusnezoffii Radix）不宜與下列哪一組藥材同用？",
+                options: [
+                    "人參、沙參、玄參、丹參",
+                    "甘草、大戟、芫花、甘遂",
+                    "貝母、半夏、白及、白蘞、栝樓及其種子",
+                    "牽牛子、巴豆、鬱金"
+                ],
+                correct: 2,
+                explanation: "中藥十八反歌訣有言「半荖貝蘞及攻烏」。其中「烏」指烏頭類（川烏、草烏、附子），它們不宜與半夏、栝樓、貝母、白及、白蘞同用，同用會增強毒性或副作用。"
+            },
+            {
+                tag: "巴豆毒性與處置",
+                question: "巴豆（Crotonis Semen）具有大毒，所含巴豆油具有強烈致瀉作用。若皮膚不慎接觸巴豆油而發皰、紅腫灼痛，下列處置何者最合適？",
+                options: [
+                    "塗抹醋並用力揉搓皮膚，直到水泡破裂",
+                    "使用 3% 硼酸水外敷，紅腫灼痛時可用黃連水搽之",
+                    "塗抹巴豆油進行以毒攻毒",
+                    "使用高溫熱敷以加速新陳代謝"
+                ],
+                correct: 1,
+                explanation: "巴豆油對皮膚有強烈刺激性。若不慎接觸發皰，應使用 3% 硼酸水外敷以消炎；皮膚紅腫灼痛可用黃連水搽抹，避免熱敷或揉破水泡引起感染。"
+            },
+            {
+                tag: "半夏天南星解毒",
+                question: "生半夏與生天南星具有黏膜刺激性毒性，誤食會導致喉部糜爛與呼吸困難。民間與臨床常用的急救解毒驗方為何？",
+                options: [
+                    "大量服用生白蜜或綠豆湯",
+                    "用生薑、防風、甘草煎湯，先含漱一半、後內服一半",
+                    "服用嗎啡與阿托品進行解毒",
+                    "直接吸入純氧，不需服藥"
+                ],
+                correct: 1,
+                explanation: "半夏、天南星毒性對黏膜刺激極大，生薑能「相殺」其毒性。民間驗方常以生薑、防風、甘草煎湯，含漱並服用，或直接以生薑汁灌服。"
+            },
+            {
+                tag: "法規與處方管理",
+                question: "根據我國《藥事法》第 64 條規定，售賣毒劇性之中藥，必須憑具備何種資格人員簽名、蓋章之處方箋，始得出售？",
+                options: [
+                    "西醫師",
+                    "中醫師",
+                    "藥劑師",
+                    "醫院行政主管"
+                ],
+                correct: 1,
+                explanation: "藥事法第 64 條規定，中藥販賣與製造業者售賣毒劇性中藥，非有中醫師簽名、蓋章之處方箋，不得出售，且購存或出售均須詳列簿冊。"
+            },
+            {
+                tag: "臨床給藥查核政策",
+                question: "根據長庚醫院對中藥毒劇藥品的管理與查核規範，護理人員投予此類藥品時，應遵守何種查核程序？",
+                options: [
+                    "需有兩位人員於給藥紀錄單簽名確認（雙人核對）",
+                    "護理人員自行給藥即可，無須簽名",
+                    "必須經由藥師在病房旁親自給藥",
+                    "只需確認病患手圈，不用填寫給藥單"
+                ],
+                correct: 0,
+                explanation: "為確保用藥安全，護理人員投予中藥毒劇藥品時，需實施雙人核對，並由兩位人員在給藥紀錄單簽名確認，該紀錄單需保存備查。"
+            },
+            {
+                tag: "中藥毒性分級",
+                question: "在中藥毒性分級中，依據口服生藥煎劑的半數致死量（LD50），若 LD50 劑量範圍「小於 5 g/kg」，在藥性上被歸類為哪一級？",
+                options: [
+                    "大毒",
+                    "有毒",
+                    "小毒",
+                    "無毒"
+                ],
+                correct: 0,
+                explanation: "根據口服生藥煎劑 LD50 毒性分級：小於 5 g/kg 屬「大毒」；5-15 g/kg 屬「有毒」；16-50 g/kg 屬「小毒」；大於 50 g/kg 屬「無毒」。"
+            },
+            {
+                tag: "禁用中藥成分",
+                question: "民國 92 年政府公告禁用廣防己、青木香、關木通、馬兜鈴、天仙藤等五種中藥材，主要原因為其含有何種對腎臟有嚴重毒性的成分？",
+                options: [
+                    "烏頭鹼",
+                    "馬兜鈴酸",
+                    "巴豆毒素",
+                    "番木鱉鹼"
+                ],
+                correct: 1,
+                explanation: "該五種中藥材皆含有「馬兜鈴酸」（Aristolochic acid）。馬兜鈴酸有極強的腎毒性與致癌性，會引起嚴重腎小管壞死、急性腎衰竭與尿毒症，因而被全面公告禁用。"
+            },
+            {
+                tag: "蟾酥使用與禁忌",
+                question: "蟾酥（Bufonis Venenum）為開竅藥，含有具強心作用的蟾蜍毒素，安全劑量極小。下列關於蟾酥的使用注意事項何者正確？",
+                options: [
+                    "內服常用劑量在 1.5 - 3.0 克之間，可久服",
+                    "具強烈毒性，外用時絕對不可入目（眼睛）；孕婦禁用",
+                    "可以直接與硃砂混合同服，不需經過炮製",
+                    "沒有任何毒副作用，外用無禁忌"
+                ],
+                correct: 1,
+                explanation: "蟾酥劇毒，內服量僅為 0.015 - 0.03 克，多入丸散。其具強烈刺激性，外用時嚴禁入目（否則易致失明），且具胚胎毒性，孕婦禁用。"
+            },
+            {
+                tag: "神農百草傳說",
+                question: "根據三國張揖《廣雅·釋器》與晉代《搜神記》記載，神農氏用來檢驗百草平、毒、寒、溫之性的工具為何？",
+                options: [
+                    "赤色赭鞭",
+                    "青銅神農鼎",
+                    "黃帝金針",
+                    "太上八卦爐"
+                ],
+                correct: 0,
+                explanation: "《廣雅》記載「桃湯赭鞭，為神農氏用以檢驗百草性味的赤色鞭子」，神農以赭鞭鞭草木，盡知其平、毒、寒、溫之性。"
+            },
+            {
+                tag: "古代瘍醫五毒",
+                question: "《周禮·天官·瘍醫》記載「凡療瘍，以五毒攻之」。此處的「五毒之藥」合劑除石膽、丹砂、雄黃、慈石外，還包含下列哪一種礦物？",
+                options: [
+                    "礜石",
+                    "硃砂",
+                    "鉛丹",
+                    "磁石"
+                ],
+                correct: 0,
+                explanation: "《周禮》註文記載，五毒之藥的作法是將「石膽、丹砂、雄黃、礜石、慈石」置於黃堥中燒之三日三夜，用以注創以破惡肉、盡出碎骨。"
+            },
+            {
+                tag: "內經服藥限制",
+                question: "根據《黃帝內經·素問·五常政大論》著名的毒藥使用極限原則，在使用「大毒之藥」治病時，應在病情去掉多少比例時停止服藥？",
+                options: [
+                    "十去其六",
+                    "十去其七",
+                    "十去其八",
+                    "十去其九"
+                ],
+                correct: 0,
+                explanation: "《內經》記載：「大毒治病，十去其六；常毒治病，十去其七；小毒治病，十去其八；無毒治病，十去其九。」此即強調中藥峻猛藥力不可過用，以免傷正。"
+            },
+            {
+                tag: "臺灣中藥典新增",
+                question: "臺灣中藥典第三版收載了 22 種有毒中藥材。請問在「第四版」中，新增了哪一種主要供外用的有毒中藥？",
+                options: [
+                    "鉛丹",
+                    "硃砂",
+                    "雄黃",
+                    "芫花"
+                ],
+                correct: 0,
+                explanation: "臺灣中藥典第四版中，特別新增了「鉛丹（外用）」作為有毒中藥品項之一，主要供外用消腫解毒。"
+            },
+            {
+                tag: "草烏配伍禁忌",
+                question: "草烏（Aconiti Kusnezoffii Radix）為溫裏藥，具大毒。除了不宜與半夏同用外，根據十八反，它還相反於下列哪一種常見止咳化痰藥？",
+                options: [
+                    "栝樓（瓜蔞）",
+                    "苦杏仁",
+                    "桔梗",
+                    "枇杷葉"
+                ],
+                correct: 0,
+                explanation: "中藥十八反中，烏頭類（川烏、草烏、附子）相反於貝母、半夏、白及、白蘞、栝樓。同用會產生劇烈毒性反應。"
+            },
+            {
+                tag: "甘遂配伍禁忌",
+                question: "甘遂（Kansui Radix）能峻下逐水，性寒有毒。根據中藥配伍禁忌「十八反」，甘遂絕不宜與下列哪一種調和百藥的常用甘溫中藥配伍？",
+                options: [
+                    "甘草",
+                    "人參",
+                    "黃耆",
+                    "當歸"
+                ],
+                correct: 0,
+                explanation: "中藥十八反歌訣有言「藻戟遂芫俱戰草」，即海藻、大戟、甘遂、芫花皆相反於甘草。配伍同用會產生毒副作用。"
+            },
+            {
+                tag: "巴豆配伍畏藥",
+                question: "巴豆（Crotonis Semen）具大毒，瀉下力極強。根據中藥配伍禁忌「十九畏」，巴豆最不宜與下列哪一種中藥同用？",
+                options: [
+                    "牽牛子",
+                    "鬱金",
+                    "丁香",
+                    "官桂"
+                ],
+                correct: 0,
+                explanation: "十九畏歌訣中「巴豆性烈最為急，偏與牽牛不相宜」。巴豆相反或相畏於牽牛子，兩者不可同用。"
+            },
+            {
+                tag: "馬錢子護理環境",
+                question: "馬錢子（Strychni Semen）含有劇毒的番木鱉鹼，會使中樞神經極度興奮。對於誤服中毒的患者，在臨床急救與護理中，應將其安置在何種環境？",
+                options: [
+                    "黑暗、安靜的病房中，避免聲光刺激誘發全身抽搐",
+                    "陽光充足且播放輕快音樂的病房中",
+                    "通風良好且溫度較高的室外空間",
+                    "裝有低溫冷氣且需要隨時大聲呼喚的搶救室"
+                ],
+                correct: 0,
+                explanation: "番木鱉鹼中毒會導致脊髓興奮性增高，極輕微的聲音、光線或震動刺激均可誘發強直性驚厥。因此，必須安置在黑暗、安靜的環境中。"
+            },
+            {
+                tag: "毒劇藥專櫃管理",
+                question: "根據臨床中藥毒劇藥品的「五專保管制度」，中藥毒劇藥品存放櫃的外觀，應有何種顏色的什麼標記以資警示？",
+                options: [
+                    "黑色「毒」字標記",
+                    "紅色「警」字標記",
+                    "黃色「慎」字標記",
+                    "白色「禁」字標記"
+                ],
+                correct: 0,
+                explanation: "中藥毒劇藥品保管制度要求「專櫃加鎖」，且櫃身應有明顯黑色「毒」字標記，不得與一般藥品混雜堆放。"
+            },
+            {
+                tag: "硃砂停用公告",
+                question: "硃砂主要成分為硫化汞，長期使用會引發汞蓄積中毒。自民國何年何月起，政府已全面禁止中藥用硃砂製造、調劑與販售？",
+                options: [
+                    "民國 94 年 5 月 1 日",
+                    "民國 80 年 9 月 18 日",
+                    "民國 92 年 11 月 4 日",
+                    "民國 104 年 2 月 24 日"
+                ],
+                correct: 0,
+                explanation: "行政院衛生署於民國 94 年 4 月 29 日公告：「自 94 年 5 月 1 日起禁止中藥用硃砂製造、調劑、輸入、輸出、販賣或陳列」。"
+            },
+            {
+                tag: "名貴中藥禁用歷史",
+                question: "為保護瀕危野生動物並維護國家形象，自民國 81 年 12 月 3 日起，政府已公告全面禁止買賣、調劑與處方下列哪一種名貴中藥材？",
+                options: [
+                    "犀牛角(粉)",
+                    "穿山甲",
+                    "熊膽",
+                    "龜板"
+                ],
+                correct: 0,
+                explanation: "自民國 81 年 12 月 3 日起，禁止進口、出口、買賣、意圖販賣而陳列、處方或調劑犀牛角(粉)及其製品，違者依野生動物保育法處辦。"
+            },
+            {
+                tag: "馬錢子安全劑量",
+                question: "馬錢子（Strychni Semen）毒性強烈，臨床應用必須嚴格控制劑量。根據藥典規範，馬錢子的「炮製品」一日內服劑量應限制在何種範圍內？",
+                options: [
+                    "0.3 - 0.6 克，且多入丸散，不宜多服久服",
+                    "1.5 - 3.0 克，可隨意煎服",
+                    "5 - 10 克，適合長期服用",
+                    "0.015 - 0.03 克，需持續服藥一個月"
+                ],
+                correct: 0,
+                explanation: "馬錢子大毒，內服常用劑量極小，炮製品一日量僅為 0.3 - 0.6 克，多作丸散服用，絕對不能超量或長期服用，以免蓄積中毒。"
+            },
+            {
+                tag: "附子炮製品",
+                question: "附子（Aconiti Lateralis Radix Praeparata）因含有劇毒烏頭鹼需經嚴格炮製。下列何者「不屬於」常見的附子加工炮製品規格？",
+                options: [
+                    "蜜炙馬錢子",
+                    "鹽附子",
+                    "黑順片",
+                    "白附片"
+                ],
+                correct: 0,
+                explanation: "附子常見的炮製品包括鹽附子、黑順片、白附片等。而「蜜炙馬錢子」是馬錢子的加工炮製品，不屬於附子的加工規格。"
+            },
+            {
+                tag: "馬兜鈴酸毒性",
+                question: "廣防己、關木通等中藥因含馬兜鈴酸而被停用。醫學研究證實，馬兜鈴酸除了嚴重的腎毒性外，還具有何種基因毒性？",
+                options: [
+                    "極強的致癌性，易導致尿路上皮癌等泌尿系統癌症",
+                    "強烈的心臟毒性，會引發嚴重心律不整",
+                    "嚴重的眼毒性，容易導致雙眼失明",
+                    "神經毒性，會造成全身肌肉僵硬與抽搐"
+                ],
+                correct: 0,
+                explanation: "馬兜鈴酸具有高度的腎毒性與基因毒性（致癌性），極易造成腎小管間質纖維化，並引發尿路上皮癌等惡性腫瘤，故已被全面禁用。"
+            },
+            {
+                tag: "巴豆炮製霜",
+                question: "為了降低巴豆（Crotonis Semen）強烈瀉下與刺激性毒性，臨床通常不直接使用生巴豆，而是將其去皮榨去大部分油脂後製成何種成品？",
+                options: [
+                    "巴豆霜（含油量降至 18%-20%）",
+                    "鹽巴豆",
+                    "酒巴豆",
+                    "醋巴豆"
+                ],
+                correct: 0,
+                explanation: "生巴豆含巴豆油 50% 以上，毒性極強。臨床必須透過熱榨去油、研細過篩製成「巴豆霜」（含油量降至 18%-20% 左右），以減輕其烈瀉與粘膜毒性。"
+            },
+            {
+                tag: "烏頭類減毒化學",
+                question: "川烏（Aconiti Radix）高溫久煎可顯著降解毒性。其化學原理是將劇毒的雙酯型烏頭鹼水解，使其轉化為毒性僅數千分之一的何種化合物？",
+                options: [
+                    "無酯型烏頭原鹼（水解掉去乙醯基與去苯甲醯基）",
+                    "單酯型苯甲醯烏頭胺",
+                    "烏頭原鹼糖苷",
+                    "無機鹽結晶"
+                ],
+                correct: 0,
+                explanation: "烏頭鹼為雙酯型生物鹼，毒性極大。久煎水解會先失去一分子醋酸（生成單酯型苯甲醯烏頭胺，毒性為1/50 - 1/500），再水解失去一分子苯甲酸，轉化為無酯型的烏頭原鹼（毒性降為1/2000 - 1/4000）。"
+            },
+            {
+                tag: "中藥十九畏",
+                question: "中藥配伍禁忌中「十九畏」歷史悠久。下列哪一組藥材配伍符合十九畏中的「相畏」禁忌（兩藥同用產生毒副作用）？",
+                options: [
+                    "官桂 畏 赤石脂",
+                    "甘草 反 甘遂",
+                    "烏頭 反 半夏",
+                    "海藻 反 甘草"
+                ],
+                correct: 0,
+                explanation: "十九畏歌訣中有「官桂善能調冷氣，若逢石脂便相欺」，即官桂（肉桂）與赤石脂相畏，不可同用。其餘選項皆屬於「十八反」而非十九畏。"
+            },
+            {
+                tag: "硃砂外用安全",
+                question: "雖然硃砂在古代常用於鎮驚安神，但現代已知其具高毒性。若將含硃砂的製劑置於高溫下火煅，主要會釋放出何種劇毒物質？",
+                options: [
+                    "游離汞（水銀蒸氣）",
+                    "烏頭鹼",
+                    "馬兜鈴酸",
+                    "番木鱉鹼"
+                ],
+                correct: 0,
+                explanation: "硃砂主要成分為硫化汞（HgS），本身化學結構穩定。但若經高溫火煅，硫化汞會分解出游離汞（Hg，即水銀蒸氣），吸入後會引發嚴重的急性汞中毒，因此硃砂忌火煅。"
+            },
+            {
+                tag: "烏頭鹼中毒解救",
+                question: "臨床上若不幸發生烏頭鹼中毒，引發嚴重的心律不整（如室性心搏過速或心室顫動），西醫臨床急救首選的抗心律不整藥物為何？",
+                options: [
+                    "Amiodarone (胺碘酮) 或 Lidocaine (利多卡因)",
+                    "Atropine (阿托品)",
+                    "Morphine (嗎啡)",
+                    "Amobarbital (異戊巴比妥)"
+                ],
+                correct: 0,
+                explanation: "烏頭鹼具有心臟毒性，容易引發致命的心律不整。臨床急救常使用 Amiodarone 或 Lidocaine 來穩定心臟電生理。若合併竇性心緩，則可使用 Atropine。"
+            },
+            {
+                tag: "處方箋保存年限",
+                question: "依據我國法規與醫療機構規範，調劑售賣毒劇性中藥之醫師處方箋，以及相關調劑購銷登記簿冊，自調劑之日起至少保存幾年？",
+                options: [
+                    "5 年",
+                    "2 年",
+                    "10 年",
+                    "1 年"
+                ],
+                correct: 0,
+                explanation: "根據相關法規與醫療機構規範，調劑售賣毒劇性中藥之醫師處方箋及相關登記簿冊，自調劑之日起，應妥善保存至少 5 年，以供衛生主管機關隨時查核。"
+            }
+        ];
+
+        /*************************************************************
+         * 2. 遊戲引擎與設定
+         *************************************************************/
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+
+        // 遊戲運行變數
+        let gold = 100;
+        let wave = 1;
+        let maxWaves = 3;
+        let gameOver = true; // 預設為 true，點擊開始按鈕後才變 false
+        let gameWon = false;
+        let score = 0;
+        let passiveGoldTimer = 0;
+
+        // 陣營城堡
+        let playerCastle;
+        let enemyCastle;
+
+        // 實體清單
+        let friendlyUnits = [];
+        let enemyUnits = [];
+        let projectiles = [];
+        let particles = [];
+
+        // 解析度適配
+        function resizeCanvas() {
+            const container = document.getElementById("canvas-container");
+            if (!container) return;
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
+            
+            // 動態調整城堡與單位位置，防止縮放視窗時漂浮或出界
+            if (playerCastle) {
+                playerCastle.y = canvas.height - 180;
+            }
+            if (enemyCastle) {
+                enemyCastle.x = canvas.width - 105;
+                enemyCastle.y = canvas.height - 180;
+            }
+            if (friendlyUnits) {
+                friendlyUnits.forEach(u => {
+                    u.y = canvas.height - 85;
+                });
+            }
+            if (enemyUnits) {
+                enemyUnits.forEach(e => {
+                    if (e.id === "cinnabar") {
+                        e.y = canvas.height - 110;
+                    } else {
+                        e.y = canvas.height - 85;
+                    }
+                });
+            }
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // 答題系統變數
+        let activeQuestions = [...QUESTION_DATABASE];
+        let currentQuestion = null;
+        let answerLocked = false;
+        let cooldownTimer = null;
+
+        // 兵種召喚設定與冷卻狀態
+        const UNIT_TEMPLATES = {
+            apprentice: {
+                id: "apprentice",
+                name: "赭鞭藥童",
+                avatar: "🧑‍🌾",
+                cost: 50,
+                maxHp: 120,
+                speed: 1.2,
+                range: 45,
+                dmg: 15,
+                cooldownMax: 2000,
+                cooldownCurrent: 0,
+                color: "#2ecc71"
+            },
+            pharmacist: {
+                id: "pharmacist",
+                name: "炮製藥師",
+                avatar: "🧙‍♂️",
+                cost: 100,
+                maxHp: 80,
+                speed: 0.8,
+                range: 220,
+                dmg: 25,
+                cooldownMax: 5000,
+                cooldownCurrent: 0,
+                color: "#3498db"
+            },
+            bean: {
+                id: "bean",
+                name: "解毒綠豆兵",
+                avatar: "🛡️",
+                cost: 150,
+                maxHp: 380,
+                speed: 0.5,
+                range: 30,
+                dmg: 2,
+                cooldownMax: 8000,
+                cooldownCurrent: 0,
+                color: "#27ae60"
+            },
+            shennong: {
+                id: "shennong",
+                name: "神農化身",
+                avatar: "👑",
+                cost: 300,
+                maxHp: 280,
+                speed: 0.9,
+                range: 60,
+                dmg: 45,
+                cooldownMax: 15000,
+                cooldownCurrent: 0,
+                color: "#f1c40f"
+            }
+        };
+
+        // 敵軍波次生成設定
+        let enemySpawnTimer = 0;
+        let enemySpawnInterval = 6000;
+
+        /*************************************************************
+         * 3. 實體類別 (Entity Classes)
+         *************************************************************/
+        class Castle {
+            constructor(x, y, maxHp, isPlayer) {
+                this.x = x;
+                this.y = y;
+                this.width = 90;
+                this.height = 140;
+                this.hp = maxHp;
+                this.maxHp = maxHp;
+                this.isPlayer = isPlayer;
+                this.name = isPlayer ? "神農百草堂" : "邪惡病邪巢";
+            }
+
+            takeDamage(amount) {
+                this.hp = Math.max(0, this.hp - amount);
+                createDamageText(this.x + this.width/2, this.y + 30, amount, "#e74c3c");
+                if (this.hp <= 0) {
+                    endGame(this.isPlayer ? false : true);
+                }
+            }
+
+            draw() {
+                ctx.save();
+                ctx.shadowBlur = 20;
+                ctx.shadowColor = this.isPlayer ? "rgba(46, 204, 113, 0.4)" : "rgba(155, 89, 182, 0.4)";
+                
+                let grad = ctx.createLinearGradient(this.x, this.y, this.x + this.width, this.y + this.height);
+                if (this.isPlayer) {
+                    grad.addColorStop(0, "#193527");
+                    grad.addColorStop(1, "#0d1b14");
+                    ctx.fillStyle = grad;
+                    ctx.strokeStyle = "#2ecc71";
+                } else {
+                    grad.addColorStop(0, "#2d163f");
+                    grad.addColorStop(1, "#12091a");
+                    ctx.fillStyle = grad;
+                    ctx.strokeStyle = "#9b59b6";
+                }
+                ctx.lineWidth = 3;
+
+                ctx.beginPath();
+                if (this.isPlayer) {
+                    ctx.moveTo(this.x, this.y + this.height);
+                    ctx.lineTo(this.x + this.width, this.y + this.height);
+                    ctx.lineTo(this.x + this.width - 15, this.y + 40);
+                    ctx.lineTo(this.x + this.width, this.y + 40);
+                    ctx.lineTo(this.x + this.width/2, this.y);
+                    ctx.lineTo(this.x, this.y + 40);
+                    ctx.lineTo(this.x + 15, this.y + 40);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.stroke();
+
+                    ctx.fillStyle = "rgba(46, 204, 113, 0.15)";
+                    ctx.fillRect(this.x + 18, this.y + 55, this.width - 36, 22);
+                    ctx.strokeStyle = "rgba(46, 204, 113, 0.4)";
+                    ctx.strokeRect(this.x + 18, this.y + 55, this.width - 36, 22);
+                    ctx.fillStyle = "#ffffff";
+                    ctx.font = "bold 9px 'Noto Sans TC'";
+                    ctx.textAlign = "center";
+                    ctx.fillText("百草堂", this.x + this.width/2, this.y + 70);
+                } else {
+                    ctx.moveTo(this.x, this.y + this.height);
+                    ctx.lineTo(this.x + this.width, this.y + this.height);
+                    ctx.lineTo(this.x + this.width - 5, this.y + 35);
+                    ctx.lineTo(this.x + this.width + 10, this.y + 20);
+                    ctx.lineTo(this.x + this.width - 15, this.y + 25);
+                    ctx.lineTo(this.x + this.width/2, this.y);
+                    ctx.lineTo(this.x + 15, this.y + 25);
+                    ctx.lineTo(this.x - 10, this.y + 20);
+                    ctx.lineTo(this.x + 5, this.y + 35);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.stroke();
+
+                    ctx.beginPath();
+                    ctx.arc(this.x + this.width/2, this.y + 75, 12, 0, Math.PI * 2);
+                    ctx.fillStyle = "#ff4757";
+                    ctx.fill();
+                    ctx.beginPath();
+                    ctx.arc(this.x + this.width/2, this.y + 75, 4, 0, Math.PI * 2);
+                    ctx.fillStyle = "#000000";
+                    ctx.fill();
+                }
+                ctx.restore();
+            }
+        }
+
+        class Unit {
+            constructor(template, x, y, isPlayer) {
+                this.id = template.id;
+                this.name = template.name;
+                this.avatar = template.avatar;
+                this.maxHp = template.maxHp;
+                this.hp = template.maxHp;
+                this.speed = template.speed;
+                this.range = template.range;
+                this.dmg = template.dmg;
+                this.color = template.color;
+                this.isPlayer = isPlayer;
+
+                this.x = x;
+                this.y = y;
+                this.width = 30;
+                this.height = 45;
+                this.attackCooldown = 0;
+                this.attackInterval = 1200;
+
+                this.slowTimer = 0;
+                this.poisonTimer = 0;
+                this.stunTimer = 0;
+                this.healingTimer = 0;
+                this.walkCycle = 0;
+            }
+
+            takeDamage(amount) {
+                this.hp = Math.max(0, this.hp - amount);
+                createDamageText(this.x + this.width/2, this.y - 10, amount, this.isPlayer ? "#e74c3c" : "#2ecc71");
+                
+                for (let i = 0; i < 4; i++) {
+                    particles.push(new Particle(
+                        this.x + this.width/2, 
+                        this.y + this.height/2, 
+                        (Math.random() - 0.5) * 3, 
+                        (Math.random() - 0.5) * 3, 
+                        this.isPlayer ? "#e74c3c" : "#9b59b6", 
+                        15 + Math.random() * 20
+                    ));
+                }
+            }
+
+            update(dt) {
+                if (this.slowTimer > 0) this.slowTimer -= dt;
+                if (this.poisonTimer > 0) {
+                    this.poisonTimer -= dt;
+                    this.takeDamage(0.1);
+                }
+                if (this.stunTimer > 0) this.stunTimer -= dt;
+                if (this.healingTimer > 0) {
+                    this.healingTimer -= dt;
+                    this.hp = Math.min(this.maxHp, this.hp + 0.15);
+                }
+
+                if (this.attackCooldown > 0) {
+                    this.attackCooldown -= dt;
+                }
+
+                if (this.isPlayer && this.id === "bean") {
+                    friendlyUnits.forEach(u => {
+                        let dist = Math.abs(u.x - this.x);
+                        if (dist < 100 && u !== this) {
+                            if (u.poisonTimer > 0) u.poisonTimer -= dt * 2;
+                            if (u.slowTimer > 0) u.slowTimer -= dt;
+                        }
+                    });
+                }
+
+                if (this.isPlayer && this.id === "shennong") {
+                    friendlyUnits.forEach(u => {
+                        let dist = Math.abs(u.x - this.x);
+                        if (dist < 150 && u !== this) {
+                            u.healingTimer = 200;
+                        }
+                    });
+                }
+
+                if (this.stunTimer > 0) return;
+
+                let currentSpeed = this.speed;
+                if (this.slowTimer > 0) currentSpeed *= 0.6;
+
+                let target = this.findTarget();
+                if (target) {
+                    if (this.attackCooldown <= 0) {
+                        this.attack(target);
+                    }
+                } else {
+                    if (this.isPlayer) {
+                        this.x += currentSpeed;
+                    } else {
+                        this.x -= currentSpeed;
+                    }
+                    this.walkCycle += 0.15;
+                }
+            }
+
+            findTarget() {
+                if (this.isPlayer) {
+                    let closestEnemy = null;
+                    let minDist = this.range;
+                    enemyUnits.forEach(e => {
+                        let dist = e.x - (this.x + this.width);
+                        if (dist >= 0 && dist < minDist) {
+                            minDist = dist;
+                            closestEnemy = e;
+                        }
+                    });
+                    if (closestEnemy) return closestEnemy;
+
+                    let distToCastle = enemyCastle.x - (this.x + this.width);
+                    if (distToCastle >= 0 && distToCastle < this.range) {
+                        return enemyCastle;
+                    }
+                } else {
+                    let closestFriendly = null;
+                    let minDist = this.range;
+                    friendlyUnits.forEach(f => {
+                        let dist = this.x - (f.x + f.width);
+                        if (dist >= 0 && dist < minDist) {
+                            minDist = dist;
+                            closestFriendly = f;
+                        }
+                    });
+                    if (closestFriendly) return closestFriendly;
+
+                    let distToCastle = this.x - (playerCastle.x + playerCastle.width);
+                    if (distToCastle >= 0 && distToCastle < this.range) {
+                        return playerCastle;
+                    }
+                }
+                return null;
+            }
+
+            attack(target) {
+                this.attackCooldown = this.attackInterval;
+
+                let fxX = this.isPlayer ? this.x + this.width + 10 : this.x - 10;
+                let fxY = this.y + 20;
+
+                if (this.id === "pharmacist") {
+                    projectiles.push(new Projectile(
+                        this.x + this.width, 
+                        this.y + 10, 
+                        target, 
+                        true, 
+                        "#3498db"
+                    ));
+                } else {
+                    let finalDmg = this.dmg;
+                    if (this.id === "shennong" && target.id === "cinnabar") {
+                        finalDmg = Math.round(this.dmg * 1.5);
+                    }
+
+                    target.takeDamage(finalDmg);
+                    
+                    let pColor = this.isPlayer ? "#2ecc71" : "#9b59b6";
+                    if (this.id === "shennong") pColor = "#f1c40f";
+
+                    for (let i = 0; i < 5; i++) {
+                        particles.push(new Particle(fxX, fxY, (Math.random() - 0.5) * 5, -Math.random() * 4, pColor, 10 + Math.random() * 15));
+                    }
+
+                    if (!this.isPlayer && this.id === "badou") {
+                        target.poisonTimer = 4000;
+                    }
+                }
+            }
+
+            draw() {
+                ctx.save();
+                
+                if (this.stunTimer > 0) {
+                    ctx.shadowBlur = 8;
+                    ctx.shadowColor = "#9b59b6";
+                } else if (this.poisonTimer > 0) {
+                    ctx.shadowBlur = 8;
+                    ctx.shadowColor = "#27ae60";
+                } else if (this.healingTimer > 0) {
+                    ctx.shadowBlur = 10;
+                    ctx.shadowColor = "#f1c40f";
+                }
+
+                let yOffset = Math.sin(this.walkCycle) * 3;
+
+                ctx.fillStyle = "rgba(20, 20, 20, 0.8)";
+                ctx.strokeStyle = this.color;
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.roundRect(this.x, this.y + yOffset, this.width, this.height, 6);
+                ctx.fill();
+                ctx.stroke();
+
+                ctx.font = "18px sans-serif";
+                ctx.textAlign = "center";
+                ctx.fillText(this.avatar, this.x + this.width / 2, this.y + 25 + yOffset);
+
+                const hpPercent = this.hp / this.maxHp;
+                ctx.fillStyle = "rgba(0,0,0,0.5)";
+                ctx.fillRect(this.x, this.y - 8 + yOffset, this.width, 4);
+                ctx.fillStyle = this.isPlayer ? "#2ecc71" : "#e74c3c";
+                ctx.fillRect(this.x, this.y - 8 + yOffset, this.width * hpPercent, 4);
+
+                if (this.stunTimer > 0) {
+                    ctx.font = "9px sans-serif";
+                    ctx.fillText("💫", this.x + this.width/2, this.y - 12 + yOffset);
+                } else if (this.poisonTimer > 0) {
+                    ctx.font = "9px sans-serif";
+                    ctx.fillText("🤢", this.x + this.width/2, this.y - 12 + yOffset);
+                }
+
+                ctx.restore();
+            }
+        }
+
+        class Projectile {
+            constructor(startX, startY, target, isFriendly, color) {
+                this.x = startX;
+                this.y = startY;
+                this.target = target;
+                this.isFriendly = isFriendly;
+                this.color = color;
+                
+                this.speed = 4.5;
+                this.dmg = isFriendly ? UNIT_TEMPLATES.pharmacist.dmg : 20;
+                
+                this.startX = startX;
+                this.startY = startY;
+                this.targetX = target.x + target.width/2;
+                this.targetY = target.y + target.height/2;
+                this.totalDist = Math.abs(this.targetX - startX);
+                
+                this.active = true;
+            }
+
+            update() {
+                if (this.target && this.target.hp > 0) {
+                    this.targetX = this.target.x + this.target.width/2;
+                    this.targetY = this.target.y + this.target.height/2;
+                }
+
+                let dx = this.targetX - this.x;
+                let step = this.speed;
+                if (Math.abs(dx) < step) {
+                    this.hit();
+                } else {
+                    this.x += dx > 0 ? step : -step;
+                    
+                    let currentDist = Math.abs(this.x - this.startX);
+                    let percent = currentDist / this.totalDist;
+                    let height = Math.sin(percent * Math.PI) * -60;
+                    this.y = this.startY + (this.targetY - this.startY) * percent + height;
+                }
+            }
+
+            hit() {
+                this.active = false;
+                let radius = 60;
+                let hitColor = this.color;
+
+                for (let i = 0; i < 12; i++) {
+                    particles.push(new Particle(
+                        this.x, 
+                        this.y, 
+                        (Math.random() - 0.5) * 6, 
+                        (Math.random() - 0.5) * 6, 
+                        hitColor, 
+                        15 + Math.random() * 20
+                    ));
+                }
+
+                if (this.isFriendly) {
+                    enemyUnits.forEach(e => {
+                        let dist = Math.abs(e.x + e.width/2 - this.x);
+                        if (dist <= radius) {
+                            e.takeDamage(this.dmg);
+                            e.slowTimer = 3500;
+                        }
+                    });
+                } else {
+                    friendlyUnits.forEach(f => {
+                        let dist = Math.abs(f.x + f.width/2 - this.x);
+                        if (dist <= radius) {
+                            f.takeDamage(this.dmg);
+                            f.stunTimer = 1000;
+                        }
+                    });
+                }
+            }
+
+            draw() {
+                ctx.save();
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = this.color;
+                
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, 7, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+                
+                ctx.strokeStyle = "#fff";
+                ctx.lineWidth = 1;
+                ctx.stroke();
+
+                particles.push(new Particle(this.x, this.y, (Math.random() - 0.5) * 0.5, (Math.random() - 0.5) * 0.5, "rgba(255,255,255,0.2)", 6));
+
+                ctx.restore();
+            }
+        }
+
+        class Particle {
+            constructor(x, y, vx, vy, color, size, text = null) {
+                this.x = x;
+                this.y = y;
+                this.vx = vx;
+                this.vy = vy;
+                this.color = color;
+                this.size = size;
+                this.alpha = 1;
+                this.decay = 0.03 + Math.random() * 0.02;
+                this.text = text;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.alpha -= this.decay;
+            }
+
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = Math.max(0, this.alpha);
+                
+                if (this.text) {
+                    ctx.font = "bold 13px sans-serif";
+                    ctx.fillStyle = this.color;
+                    ctx.textAlign = "center";
+                    ctx.fillText(this.text, this.x, this.y);
+                } else {
+                    ctx.fillStyle = this.color;
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                ctx.restore();
+            }
+        }
+
+        function createDamageText(x, y, val, color) {
+            particles.push(new Particle(x, y, (Math.random() - 0.5) * 2, -1.8 - Math.random(), color, 12, `-${val}`));
+        }
+
+        function createFloatGoldText(x, y, val) {
+            particles.push(new Particle(x, y, 0, -2, "#f1c40f", 14, `+${val} 🪙`));
+        }
+
+        /*************************************************************
+         * 4. 敵軍生成與波次管理
+         *************************************************************/
+        const ENEMY_TEMPLATES = {
+            chuanwu: {
+                id: "chuanwu",
+                name: "生川烏兵",
+                avatar: "👹",
+                maxHp: 90,
+                speed: 1.0,
+                range: 40,
+                dmg: 16,
+                color: "#e74c3c"
+            },
+            badou: {
+                id: "badou",
+                name: "生巴豆獸",
+                avatar: "🐗",
+                maxHp: 160,
+                speed: 1.4,
+                range: 35,
+                dmg: 12,
+                color: "#d35400"
+            },
+            maqianzi: {
+                id: "maqianzi",
+                name: "生馬錢子怪",
+                avatar: "👾",
+                maxHp: 75,
+                speed: 0.7,
+                range: 200,
+                dmg: 18,
+                color: "#9b59b6"
+            },
+            cinnabar: {
+                id: "cinnabar",
+                name: "硃砂禁忌魔",
+                avatar: "🗿",
+                maxHp: 950,
+                speed: 0.4,
+                range: 70,
+                dmg: 70,
+                color: "#c0392b"
+            }
+        };
+
+        function spawnEnemy(type) {
+            let startX = canvas.width - enemyCastle.width;
+            let startY = canvas.height - 85;
+            let template = ENEMY_TEMPLATES[type];
+            let newEnemy = new Unit(template, startX, startY, false);
+            
+            if (type === "cinnabar") {
+                newEnemy.width = 50;
+                newEnemy.height = 70;
+                newEnemy.y = canvas.height - 110;
+            }
+
+            enemyUnits.push(newEnemy);
+
+            for (let i = 0; i < 8; i++) {
+                particles.push(new Particle(
+                    startX, 
+                    startY + 20, 
+                    (Math.random() - 0.5) * 3, 
+                    (Math.random() - 0.5) * 3, 
+                    "#9b59b6", 
+                    10 + Math.random() * 15
+                ));
+            }
+        }
+
+        function handleEnemyWaveSpawn(dt) {
+            enemySpawnTimer += dt;
+            if (enemySpawnTimer >= enemySpawnInterval) {
+                enemySpawnTimer = 0;
+
+                if (wave === 1) {
+                    if (Math.random() < 0.7) {
+                        spawnEnemy("chuanwu");
+                    } else {
+                        spawnEnemy("badou");
+                    }
+                } else if (wave === 2) {
+                    let roll = Math.random();
+                    if (roll < 0.4) {
+                        spawnEnemy("chuanwu");
+                    } else if (roll < 0.7) {
+                        spawnEnemy("badou");
+                    } else {
+                        spawnEnemy("maqianzi");
+                    }
+                } else if (wave === 3) {
+                    enemySpawnInterval = 4500;
+                    let roll = Math.random();
+                    if (roll < 0.3) {
+                        spawnEnemy("chuanwu");
+                    } else if (roll < 0.6) {
+                        spawnEnemy("badou");
+                    } else if (roll < 0.8) {
+                        spawnEnemy("maqianzi");
+                    }
+                }
+            }
+        }
+
+        /*************************************************************
+         * 5. 答題與教學系統
+         *************************************************************/
+        function initQuestions() {
+            activeQuestions = [...QUESTION_DATABASE];
+            score = 0;
+            loadNewQuestion();
+        }
+
+        function loadNewQuestion() {
+            document.getElementById("exp-panel").style.display = "none";
+
+            if (activeQuestions.length === 0) {
+                activeQuestions = [...QUESTION_DATABASE];
+            }
+
+            let randIdx = Math.floor(Math.random() * activeQuestions.length);
+            currentQuestion = activeQuestions.splice(randIdx, 1)[0];
+
+            document.getElementById("q-tag").innerText = currentQuestion.tag;
+            document.getElementById("q-text").innerText = currentQuestion.question;
+
+            const container = document.getElementById("options-container");
+            container.innerHTML = "";
+
+            let mappedOpts = currentQuestion.options.map((opt, idx) => {
+                return { text: opt, originalIndex: idx };
+            });
+            mappedOpts.sort(() => Math.random() - 0.5);
+
+            mappedOpts.forEach((opt, idx) => {
+                const btn = document.createElement("button");
+                btn.className = "option-btn";
+                // 儲存原始選項索引，以便答錯時高亮正確選項 (新要求)
+                btn.dataset.originalIndex = opt.originalIndex;
+                btn.innerHTML = `<span class="prefix">${String.fromCharCode(65 + idx)}</span> ${opt.text}`;
+                btn.onclick = () => checkAnswer(opt.originalIndex, btn);
+                container.appendChild(btn);
+            });
+        }
+
+        function checkAnswer(selectedIdx, btnElement) {
+            if (answerLocked || gameOver) return;
+
+            const allButtons = document.querySelectorAll(".option-btn");
+            
+            if (selectedIdx === currentQuestion.correct) {
+                btnElement.classList.add("correct");
+                answerLocked = true;
+                score += 10;
+
+                gold += 100;
+                updateGoldUI();
+                createFloatGoldText(canvas.width / 4, canvas.height / 2, 100);
+
+                setTimeout(() => {
+                    answerLocked = false;
+                    loadNewQuestion();
+                }, 1600);
+
+            } else {
+                btnElement.classList.add("wrong");
+                answerLocked = true;
+
+                // 答錯時，禁用所有按鈕，且將「正確選項」呈現黃色 (新要求)
+                allButtons.forEach((btn) => {
+                    btn.disabled = true;
+                    if (parseInt(btn.dataset.originalIndex) === currentQuestion.correct) {
+                        btn.classList.add("answer-correct-highlight");
+                    }
+                });
+
+                const expPanel = document.getElementById("exp-panel");
+                const expText = document.getElementById("exp-text");
+                expPanel.style.display = "block";
+                expText.innerText = currentQuestion.explanation;
+
+                const cdBarContainer = document.getElementById("cd-bar-container");
+                const cdBar = document.getElementById("cd-bar");
+                const cdText = document.getElementById("cd-text");
+                
+                cdBarContainer.style.display = "block";
+                cdText.style.display = "block";
+                cdBar.style.width = "0%";
+
+                setTimeout(() => {
+                    cdBar.style.transition = "width 3s linear";
+                    cdBar.style.width = "100%";
+                }, 50);
+
+                setTimeout(() => {
+                    cdBarContainer.style.display = "none";
+                    cdText.style.display = "none";
+                    cdBar.style.width = "0%";
+                    cdBar.style.transition = "none";
+                    answerLocked = false;
+                    loadNewQuestion();
+                }, 3050);
+            }
+        }
+
+        function updateGoldUI() {
+            document.getElementById("gold-val").innerText = gold;
+            
+            Object.keys(UNIT_TEMPLATES).forEach(uid => {
+                const btn = document.getElementById(`btn-${uid}`);
+                const cost = UNIT_TEMPLATES[uid].cost;
+                const inCd = UNIT_TEMPLATES[uid].cooldownCurrent > 0;
+                
+                if (gold >= cost && !inCd && !gameOver) {
+                    btn.classList.remove("disabled");
+                } else {
+                    btn.classList.add("disabled");
+                }
+            });
+        }
+
+        /*************************************************************
+         * 6. 召喚防禦兵種
+         *************************************************************/
+        function initDeck() {
+            Object.keys(UNIT_TEMPLATES).forEach(uid => {
+                const btn = document.getElementById(`btn-${uid}`);
+                btn.onclick = () => {
+                    summonUnit(uid);
+                };
+            });
+        }
+
+        function summonUnit(uid) {
+            if (gameOver) return;
+            const template = UNIT_TEMPLATES[uid];
+            if (gold < template.cost) return;
+            if (template.cooldownCurrent > 0) return;
+
+            gold -= template.cost;
+            updateGoldUI();
+
+            let startX = playerCastle.width + 10;
+            let startY = canvas.height - 85;
+            let newUnit = new Unit(template, startX, startY, true);
+            friendlyUnits.push(newUnit);
+
+            template.cooldownCurrent = template.cooldownMax;
+            const btn = document.getElementById(`btn-${uid}`);
+            btn.classList.add("in-cooldown");
+            
+            for (let i = 0; i < 6; i++) {
+                particles.push(new Particle(
+                    startX, 
+                    startY + 20, 
+                    (Math.random() - 0.5) * 3, 
+                    (Math.random() - 0.5) * 3, 
+                    template.color, 
+                    10 + Math.random() * 12
+                ));
+            }
+        }
+
+        function updateDeckCooldowns(dt) {
+            Object.keys(UNIT_TEMPLATES).forEach(uid => {
+                const template = UNIT_TEMPLATES[uid];
+                if (template.cooldownCurrent > 0) {
+                    template.cooldownCurrent -= dt;
+                    if (template.cooldownCurrent <= 0) {
+                        template.cooldownCurrent = 0;
+                        document.getElementById(`btn-${uid}`).classList.remove("in-cooldown");
+                        document.getElementById(`cooldown-${uid}`).innerText = "0";
+                        document.getElementById(`progress-${uid}`).style.width = "0%";
+                    } else {
+                        let sec = (template.cooldownCurrent / 1000).toFixed(1);
+                        document.getElementById(`cooldown-${uid}`).innerText = sec;
+                        let pct = (template.cooldownCurrent / template.cooldownMax) * 100;
+                        document.getElementById(`progress-${uid}`).style.width = `${pct}%`;
+                    }
+                }
+            });
+        }
+
+        /*************************************************************
+         * 7. 遊戲主循環
+         *************************************************************/
+        let lastTime = 0;
+
+        function gameLoop(timestamp) {
+            if (gameOver) return;
+            
+            if (!lastTime) lastTime = timestamp;
+            let dt = timestamp - lastTime;
+            lastTime = timestamp;
+
+            if (dt > 100) dt = 16; 
+
+            update(dt);
+            render();
+            requestAnimationFrame(gameLoop);
+        }
+
+        function update(dt) {
+            passiveGoldTimer += dt;
+            if (passiveGoldTimer >= 1000) {
+                passiveGoldTimer = 0;
+                gold += 1;
+                updateGoldUI();
+            }
+
+            updateDeckCooldowns(dt);
+            updateGoldUI();
+
+            document.getElementById("player-hp-bar").style.width = `${(playerCastle.hp / playerCastle.maxHp) * 100}%`;
+            document.getElementById("enemy-hp-bar").style.width = `${(enemyCastle.hp / enemyCastle.maxHp) * 100}%`;
+
+            friendlyUnits.forEach(u => u.update(dt));
+            enemyUnits.forEach(e => e.update(dt));
+            projectiles.forEach(p => p.update());
+
+            friendlyUnits = friendlyUnits.filter(u => u.hp > 0);
+            
+            enemyUnits = enemyUnits.filter(e => {
+                if (e.hp <= 0) {
+                    let reward = e.id === "cinnabar" ? 150 : 20;
+                    gold += reward;
+                    createFloatGoldText(e.x, e.y, reward);
+                    return false;
+                }
+                return true;
+            });
+
+            projectiles = projectiles.filter(p => p.active);
+
+            particles.forEach(p => p.update());
+            particles = particles.filter(p => p.alpha > 0);
+
+            handleWaveController(dt);
+            handleEnemyWaveSpawn(dt);
+        }
+
+        let gameTime = 0;
+        let bossSpawned = false;
+
+        function handleWaveController(dt) {
+            gameTime += dt;
+
+            if (gameTime < 40000) {
+                wave = 1;
+                enemySpawnInterval = 7000;
+            } else if (gameTime >= 40000 && gameTime < 90000) {
+                wave = 2;
+                enemySpawnInterval = 5500;
+            } else {
+                wave = 3;
+                enemySpawnInterval = 4500;
+                
+                if (!bossSpawned) {
+                    bossSpawned = true;
+                    spawnEnemy("cinnabar");
+                    createDamageText(canvas.width * 0.75, 80, "⚠️ 硃砂重金屬魔王降臨！", "#ff4757");
+                }
+            }
+
+            document.getElementById("wave-val").innerText = `${wave} / ${maxWaves}`;
+        }
+
+        render = function() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            drawBackground();
+
+            playerCastle.draw();
+            enemyCastle.draw();
+
+            friendlyUnits.forEach(u => u.draw());
+            enemyUnits.forEach(e => e.draw());
+            projectiles.forEach(p => p.draw());
+            particles.forEach(p => p.draw());
+        }
+
+        function drawBackground() {
+            let skyGrad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            skyGrad.addColorStop(0, "#080c0a");
+            skyGrad.addColorStop(1, "#121b16");
+            ctx.fillStyle = skyGrad;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.strokeStyle = "rgba(46, 204, 113, 0.03)";
+            ctx.lineWidth = 1;
+            for (let x = 0; x < canvas.width; x += 40) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, canvas.height);
+                ctx.stroke();
+            }
+
+            let groundY = canvas.height - 40;
+            ctx.fillStyle = "#1e130c";
+            ctx.fillRect(0, groundY, canvas.width, 40);
+
+            ctx.strokeStyle = "#27ae60";
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(0, groundY);
+            ctx.lineTo(canvas.width, groundY);
+            ctx.stroke();
+
+            ctx.fillStyle = "#2ecc71";
+            for (let i = 20; i < canvas.width; i += 120) {
+                ctx.beginPath();
+                ctx.arc(i, groundY, 4, 0, Math.PI, true);
+                ctx.fill();
+            }
+        }
+
+        /*************************************************************
+         * 8. 遊戲啟動與結束
+         *************************************************************/
+        function initGame() {
+            gold = 100;
+            wave = 1;
+            gameTime = 0;
+            bossSpawned = false;
+            enemySpawnInterval = 6500;
+            gameOver = false;
+            gameWon = false;
+
+            friendlyUnits = [];
+            enemyUnits = [];
+            projectiles = [];
+            particles = [];
+
+            playerCastle = new Castle(15, canvas.height - 180, 1000, true);
+            enemyCastle = new Castle(canvas.width - 105, canvas.height - 180, 1500, false);
+
+            initQuestions();
+            updateGoldUI();
+
+            Object.keys(UNIT_TEMPLATES).forEach(uid => {
+                UNIT_TEMPLATES[uid].cooldownCurrent = 0;
+                document.getElementById(`btn-${uid}`).classList.remove("in-cooldown");
+            });
+
+            document.getElementById("overlay").classList.remove("active");
+
+            lastTime = 0;
+            requestAnimationFrame(gameLoop);
+        }
+
+        function endGame(won) {
+            gameOver = true;
+            gameWon = won;
+
+            const overlay = document.getElementById("overlay");
+            const icon = document.getElementById("modal-icon");
+            const title = document.getElementById("modal-title");
+            const desc = document.getElementById("modal-desc");
+
+            overlay.classList.add("active");
+
+            if (won) {
+                icon.innerText = "🏆";
+                title.innerText = "神農大捷！";
+                title.className = "modal-title win";
+                desc.innerHTML = `
+                    <h3>🌿 教學回顧：毒劇中藥防守成功</h3>
+                    <p>你以精準的醫藥安全性知識指引了神農守衛軍！以下是保護百草堂的關鍵成就：</p>
+                    <ul>
+                        <li><strong>合理炮製減毒</strong>：高溫久煎水解烏頭鹼等雙酯型生物鹼，大幅降解毒性。</li>
+                        <li><strong>防範配伍禁忌</strong>：遵循十八反、十九畏禁忌（如烏頭反半夏貝母、巴豆畏牽牛），絕不合用。</li>
+                        <li><strong>依法規管制</strong>：依《藥事法》管制毒劇藥專櫃專簿登記，認明醫師紅邊專用處方調劑。</li>
+                        <li><strong>熟記禁用毒物</strong>：硃砂全面禁用，廣防己等馬兜鈴酸中藥具強烈腎毒性已公告停用！</li>
+                    </ul>
+                `;
+            } else {
+                icon.innerText = "💀";
+                title.innerText = "百草堂失陷...";
+                title.className = "modal-title lose";
+                desc.innerHTML = `
+                    <h3>🥀 藥案警示：安全防範不可疏忽</h3>
+                    <p>病邪入侵，生川烏、生巴豆造成了嚴重的用藥事故。別氣餒：</p>
+                    <ul>
+                        <li><strong>積極答題賺錢</strong>：正確回答中藥安全性題目，能提供源源不絕的 100 金幣！</li>
+                        <li><strong>善用炮製藥師</strong>：炮製砂鍋能減速並虛弱大群病邪；<strong>解毒綠豆兵</strong>則能抵擋猛烈攻勢。</li>
+                        <li>再試一次，學習更多神醫智慧守護用藥安全吧！</li>
+                    </ul>
+                `;
+            }
+        }
+
+        // 初始化監聽與綁定
+        document.getElementById("btn-restart").onclick = initGame;
+        
+        document.getElementById("btn-start-game").onclick = () => {
+            document.getElementById("welcome-overlay").classList.remove("active");
+            initGame();
+        };
+
+        // 說明彈窗控制
+        document.getElementById("btn-help").onclick = () => {
+            document.getElementById("help-overlay").classList.add("active");
+        };
+        document.getElementById("btn-close-help").onclick = () => {
+            document.getElementById("help-overlay").classList.remove("active");
+        };
+
+        initDeck();
+        
+        // 初始載入時繪製靜態背景
+        playerCastle = new Castle(15, canvas.height - 180, 1000, true);
+        enemyCastle = new Castle(canvas.width - 105, canvas.height - 180, 1500, false);
+        resizeCanvas();
+        drawBackground();
+        playerCastle.draw();
+        enemyCastle.draw();
+    </script>
+</body>
+</html>
