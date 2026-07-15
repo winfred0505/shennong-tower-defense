@@ -25,6 +25,7 @@
             justify-content: center; /* 垂直居中以防滾動 */
             overflow: hidden; /* 隱藏滾動條，確保單頁體驗 */
             padding: 10px;
+            font-size: 16px;
         }
 
         /* 主選單介面 */
@@ -44,7 +45,7 @@
         }
 
         .menu-title-area h1 {
-            font-size: 2.5rem;
+            font-size: 2.7rem;
             font-weight: 900;
             background: linear-gradient(45deg, #00f2fe, #4facfe, #8a2be2, #f35588);
             -webkit-background-clip: text;
@@ -54,7 +55,7 @@
         }
 
         .menu-title-area p {
-            font-size: 1rem;
+            font-size: 1.1rem;
             color: #a499d4;
         }
 
@@ -129,13 +130,13 @@
         .verbs .icon-box { background: rgba(243, 85, 136, 0.1); color: #f35588; }
 
         .mode-card h2 {
-            font-size: 1.25rem;
+            font-size: 1.35rem;
             font-weight: 700;
             color: #ffffff;
         }
 
         .mode-card p {
-            font-size: 0.85rem;
+            font-size: 0.95rem;
             color: #b1a7d6;
             line-height: 1.4;
             min-height: 40px;
@@ -164,7 +165,7 @@
         .setting-label {
             font-weight: 600;
             color: #e0dbff;
-            font-size: 0.95rem;
+            font-size: 1.05rem;
         }
 
         .selector-btn-group {
@@ -179,7 +180,7 @@
             color: #d1c9ff;
             padding: 6px 14px;
             border-radius: 20px;
-            font-size: 0.85rem;
+            font-size: 0.92rem;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s;
@@ -204,7 +205,7 @@
             color: #d1c9ff;
             padding: 8px 16px;
             border-radius: 10px;
-            font-size: 0.9rem;
+            font-size: 0.98rem;
             font-weight: 600;
             outline: none;
             cursor: pointer;
@@ -222,13 +223,12 @@
             border: none;
             color: white;
             padding: 14px 50px;
-            font-size: 1.15rem;
+            font-size: 1.25rem;
             font-weight: 800;
             border-radius: 30px;
             cursor: pointer;
             box-shadow: 0 8px 25px rgba(138, 43, 226, 0.4);
             transition: all 0.3s ease;
-            animation: gradientMove 4s infinite alternate, pulse-effect 2s infinite;
             outline: none;
             margin: 5px auto 0;
             display: inline-block;
@@ -271,7 +271,7 @@
         }
 
         .game-info-deck {
-            font-size: 1.15rem;
+            font-size: 1.3rem;
             font-weight: 800;
             background: linear-gradient(45deg, #00f2fe, #4facfe, #8a2be2);
             -webkit-background-clip: text;
@@ -284,7 +284,7 @@
             color: #bcaedb;
             padding: 5px 12px;
             border-radius: 15px;
-            font-size: 0.8rem;
+            font-size: 0.9rem;
             font-weight: 700;
             cursor: pointer;
             transition: all 0.2s;
@@ -296,7 +296,7 @@
             color: #ff6b6b;
         }
 
-        /* 答題區域 - 高度緊湊化 */
+        /* 答題區域 - 題目字體放大 */
         .quiz-panel {
             background: rgba(255, 255, 255, 0.03);
             border: 1px solid rgba(255, 255, 255, 0.08);
@@ -307,7 +307,7 @@
         }
 
         .quiz-question-type {
-            font-size: 0.72rem;
+            font-size: 0.85rem;
             font-weight: 800;
             text-transform: uppercase;
             color: #00f2fe;
@@ -317,21 +317,21 @@
         }
 
         .quiz-question {
-            font-size: 1.1rem;
+            font-size: 1.35rem;
             font-weight: 700;
             margin-bottom: 2px;
             color: #ffffff;
             text-align: center;
-            min-height: 24px;
-            line-height: 1.3;
+            min-height: 28px;
+            line-height: 1.35;
         }
 
         .quiz-question-hint {
-            font-size: 0.88rem;
+            font-size: 1.05rem;
             color: #a499d4;
             text-align: center;
             margin-bottom: 8px;
-            min-height: 18px;
+            min-height: 20px;
         }
 
         .quiz-options {
@@ -346,7 +346,7 @@
             color: #d1c9ff;
             padding: 8px 12px;
             border-radius: 8px;
-            font-size: 0.95rem;
+            font-size: 1.12rem;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s ease;
@@ -391,7 +391,7 @@
             align-items: center;
             color: #ff4757;
             font-weight: 700;
-            font-size: 1.05rem;
+            font-size: 1.15rem;
             z-index: 10;
             padding: 10px;
             text-align: center;
@@ -432,7 +432,7 @@
             padding: 4px 12px;
             border-radius: 20px;
             font-weight: 700;
-            font-size: 0.85rem;
+            font-size: 0.95rem;
             display: flex;
             align-items: center;
             gap: 5px;
@@ -486,14 +486,14 @@
         }
 
         .spawn-name {
-            font-size: 0.85rem;
+            font-size: 0.92rem;
             font-weight: 700;
             color: #ffffff;
             margin-bottom: 1px;
         }
 
         .spawn-desc {
-            font-size: 0.65rem;
+            font-size: 0.72rem;
             color: #a499d4;
             margin-bottom: 4px;
             text-align: center;
@@ -501,7 +501,7 @@
         }
 
         .spawn-cost {
-            font-size: 0.8rem;
+            font-size: 0.88rem;
             font-weight: 700;
             color: #ffd700;
             display: flex;
@@ -573,7 +573,7 @@
         }
 
         .modal-title {
-            font-size: 1.8rem;
+            font-size: 2.1rem;
             font-weight: 900;
             margin-bottom: 8px;
         }
@@ -591,7 +591,7 @@
         }
 
         .modal-desc {
-            font-size: 0.95rem;
+            font-size: 1.05rem;
             color: #bcaedb;
             margin-bottom: 15px;
             line-height: 1.4;
@@ -603,7 +603,7 @@
             padding: 10px 15px;
             margin-bottom: 18px;
             text-align: left;
-            font-size: 0.88rem;
+            font-size: 1.05rem;
             color: #d1c9ff;
             display: flex;
             flex-direction: column;
@@ -632,7 +632,7 @@
             border: none;
             color: white;
             padding: 10px 24px;
-            font-size: 0.95rem;
+            font-size: 1.1rem;
             font-weight: 700;
             border-radius: 20px;
             cursor: pointer;
@@ -659,7 +659,7 @@
         }
 
         .intro-banner {
-            font-size: 0.78rem;
+            font-size: 0.88rem;
             color: #7d70a3;
             text-align: center;
             line-height: 1.4;
@@ -1030,6 +1030,104 @@ function renderSpawnPanel() {
 }
 
 // ========================================================
+// 智慧型例句遮罩挖空演算法 (解決例句無空格問題)
+// ========================================================
+function maskSentence(sentence, rawWord) {
+    if (!sentence) return "";
+    
+    // 統一引號符號，避免排版字元不一致
+    let normalizedSentence = sentence.replace(/[’‘]/g, "'").replace(/[“”]/g, '"');
+    
+    // 支援以 "="、"/" 或換行符號切割多重同義詞與替代字
+    let rawWordNorm = rawWord.replace(/\n/g, "=");
+    let rawCandidates = rawWordNorm.split(/[=/]/).map(s => s.trim()).filter(Boolean);
+    let baseCandidates = [];
+    
+    rawCandidates.forEach(cand => {
+        let c = cand.replace(/[’‘]/g, "'").replace(/[“”]/g, '"');
+        
+        // 移除詞性與輔助括號 (v.), (n.), (adj.), (adv.), (prep.), (pron.), (conj.), (v. / n.)
+        c = c.replace(/\((v\.|n\.|adj\.|adv\.|prep\.|pron\.|conj\.|v|n|adj|adv|prep|pron|conj|v\. \/ n\.)\)/gi, "").trim();
+        
+        if (!c) return;
+        
+        // 處理 parent(s) 或 box(es) 型態的複數括號
+        let parenSuffixMatch = c.match(/^([a-zA-Z0-9\-\s]+)\((s|es|ies)\)$/i);
+        if (parenSuffixMatch) {
+            let base = parenSuffixMatch[1].trim();
+            let suffix = parenSuffixMatch[2].trim();
+            baseCandidates.push(base);
+            baseCandidates.push(base + suffix);
+            return;
+        }
+        
+        // 處理 child(children) 或 policeman (policemen) 型態的變形括號
+        let parenAltMatch = c.match(/^([a-zA-Z0-9\-\s]+)\s*\(([a-zA-Z0-9\-\s]+)\)$/i);
+        if (parenAltMatch) {
+            baseCandidates.push(parenAltMatch[1].trim());
+            baseCandidates.push(parenAltMatch[2].trim());
+            return;
+        }
+        
+        baseCandidates.push(c);
+    });
+    
+    // 去除重複，並優先比對長度較長之片語或單字
+    baseCandidates = baseCandidates.filter((v, i, a) => a.indexOf(v) === i);
+    baseCandidates.sort((a, b) => b.length - a.length);
+    
+    // 動態建構規則運算式，以涵蓋英文常規變化
+    let patterns = [];
+    baseCandidates.forEach(cand => {
+        let escaped = escapeRegExp(cand);
+        // 基本與常見字尾比對 (s, es, ed, ing, d, 's)
+        patterns.push(escaped + "(s|es|ed|ing|d|'s)?");
+        
+        // 處理字尾 y 轉為 ies, ied, ying, y's 的規則
+        if (cand.endsWith('y') && cand.length > 3) {
+            let root = cand.slice(0, -1);
+            let escapedRoot = escapeRegExp(root);
+            patterns.push(escapedRoot + "(ies|ied|ying|y's|s|ed|ing|d)?");
+        }
+        
+        // 處理重複子音字尾 (如 stop -> stopped, swim -> swimming)
+        let lastChar = cand.charAt(cand.length - 1).toLowerCase();
+        if ("bdglmnprst".includes(lastChar) && cand.length > 2) {
+            patterns.push(escaped + lastChar + "(ed|ing)");
+        }
+    });
+    
+    // 1. 優先使用字詞邊界 (\b) 進行精確比對替換
+    let regexBoundary = new RegExp(`\\b(${patterns.join('|')})\\b`, 'i');
+    if (regexBoundary.test(normalizedSentence)) {
+        return normalizedSentence.replace(regexBoundary, "_______");
+    }
+    
+    // 2. 備用方案：取消字詞邊界，由長至短直接進行子字串比對替換
+    for (let cand of baseCandidates) {
+        let regexNoBoundary = new RegExp(escapeRegExp(cand), 'gi');
+        if (regexNoBoundary.test(normalizedSentence)) {
+            return normalizedSentence.replace(regexNoBoundary, "_______");
+        }
+    }
+    
+    // 3. 終極方案：若是片語，嘗試替換片語中的最後一個主詞 (如 take a shower -> 替換 shower)
+    if (baseCandidates.length > 0) {
+        let firstCand = baseCandidates[0];
+        let words = firstCand.split(/\s+/);
+        let mainWord = words[words.length - 1];
+        if (mainWord.length > 2) {
+            let regexMain = new RegExp(escapeRegExp(mainWord), 'gi');
+            if (regexMain.test(normalizedSentence)) {
+                return normalizedSentence.replace(regexMain, "_______");
+            }
+        }
+    }
+    
+    return normalizedSentence;
+}
+
+// ========================================================
 // 題目產生器邏輯
 // ========================================================
 function initQuiz() {
@@ -1083,12 +1181,8 @@ function initQuiz() {
             label.innerText = "✍️ 例句填空挑戰";
             label.style.color = "#ffbe76";
             
-            const wordRegex = new RegExp(`\\b${escapeRegExp(dataItem.word)}(s|es|ed|ing)?\\b`, 'gi');
-            let maskedSentence = dataItem.example.replace(wordRegex, "_______");
-            
-            if (maskedSentence === dataItem.example) {
-                maskedSentence = dataItem.example.replace(dataItem.word, "_______");
-            }
+            // 使用新設計的智慧型遮罩挖空演算法
+            const maskedSentence = maskSentence(dataItem.example, dataItem.word);
 
             questionText.innerText = maskedSentence;
             hintText.innerText = `中文翻譯: ${dataItem.example_translation}`;
@@ -1227,7 +1321,7 @@ function triggerQuizCooldown() {
     const timerText = document.getElementById('quiz-cooldown-timer');
     const msgText = document.getElementById('quiz-cooldown-msg');
     
-    msgText.innerHTML = `❌ 答錯了！正確答案應為：<br><b style="color: #2ecc71; font-size: 1.1rem;">${currentQuiz.correctAnswer}</b>`;
+    msgText.innerHTML = `❌ 答錯了！正確答案應為：<br><b style="color: #2ecc71; font-size: 1.25rem;">${currentQuiz.correctAnswer}</b>`;
     overlay.style.display = 'flex';
     timerText.innerText = quizCooldownTime;
     
@@ -1246,25 +1340,6 @@ function triggerQuizCooldown() {
 function addCoins(amount) {
     coins += amount;
     updateCoinsDisplay();
-}
-
-function updateCoinsDisplay() {
-    document.getElementById('hud-coin-val').innerText = `💰 金幣: ${Math.floor(coins)}`;
-}
-
-function updateKillDisplay() {
-    document.getElementById('hud-stats-val').innerText = `⚔️ 擊殺數: ${totalKilled}`;
-}
-
-function createFloatingText(text, x, y, color) {
-    const el = document.createElement('div');
-    el.className = 'floating-text';
-    el.innerText = text;
-    el.style.left = `${x}px`;
-    el.style.top = `${y}px`;
-    el.style.color = color;
-    document.body.appendChild(el);
-    setTimeout(() => el.remove(), 800);
 }
 
 // ========================================================
@@ -1423,7 +1498,7 @@ function makeSpellingError(word) {
     
     if (r < 0.35) {
         const idx = Math.floor(Math.random() * chars.length);
-        chars.insert(idx, chars[idx]);
+        chars.splice(idx, 0, chars[idx]);
     } else if (r < 0.7) {
         const idx = Math.floor(Math.random() * chars.length);
         chars.splice(idx, 1);
@@ -1435,10 +1510,6 @@ function makeSpellingError(word) {
     }
     return chars.join('');
 }
-
-Array.prototype.insert = function (index, item) {
-    this.splice(index, 0, item);
-};
 
 // ========================================================
 // 戰鬥與物理 AI 引擎
@@ -1705,7 +1776,7 @@ function renderGame() {
         ctx.fill();
 
         ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 8px Outfit';
+        ctx.font = 'bold 9.5px Outfit';
         ctx.textAlign = 'center';
         ctx.fillText(p.type.toUpperCase(), p.x, p.y - p.size - 10);
 
@@ -1729,7 +1800,7 @@ function renderGame() {
         ctx.fill();
 
         ctx.fillStyle = '#ff7675';
-        ctx.font = e.isBoss ? 'bold 11px Outfit' : 'bold 9.5px Outfit';
+        ctx.font = e.isBoss ? 'bold 14px Outfit' : 'bold 12px Outfit';
         ctx.textAlign = 'center';
         ctx.fillText(e.label, e.x, e.y - e.radius - 10);
 
@@ -1790,7 +1861,7 @@ function drawBase(base, isPlayer) {
     ctx.fillRect(base.x - 5, base.y - 12, base.width + 10, 12);
     
     ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 10.5px Noto Sans TC';
+    ctx.font = 'bold 12.5px Noto Sans TC';
     ctx.textAlign = 'center';
     ctx.fillText(isPlayer ? "知識城堡" : "混亂基地", base.x + base.width/2, base.y - 20);
     
@@ -1854,6 +1925,25 @@ function confirmBackToMenu() {
     if (confirm("您確定要終止目前守護戰並返回主選單嗎？目前進度將不會被保留。")) {
         backToMenu();
     }
+}
+
+function updateCoinsDisplay() {
+    document.getElementById('hud-coin-val').innerText = `💰 金幣: ${Math.floor(coins)}`;
+}
+
+function updateKillDisplay() {
+    document.getElementById('hud-stats-val').innerText = `⚔️ 擊殺數: ${totalKilled}`;
+}
+
+function createFloatingText(text, x, y, color) {
+    const el = document.createElement('div');
+    el.className = 'floating-text';
+    el.innerText = text;
+    el.style.left = `${x}px`;
+    el.style.top = `${y}px`;
+    el.style.color = color;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 800);
 }
 
 window.onload = function() {
