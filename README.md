@@ -5,6 +5,7 @@
 * **🌐 GitHub Pages 線上遊玩網址**：[https://winfred0505.github.io/shennong-tower-defense/](https://winfred0505.github.io/shennong-tower-defense/)
 * **💻 GitHub 專案原始碼**：[https://github.com/winfred0505/shennong-tower-defense](https://github.com/winfred0505/shennong-tower-defense)
 * **📁 本地安裝檔案路徑**：[英文單字與三態守護戰.html](file:///D:/20260711%20%E5%A1%94%E9%98%B2%E7%B6%B2%E9%A0%81/%E8%8B%B1%E6%96%87%E5%96%AE%E5%AD%97%E8%88%87%E4%B8%89%E6%85%8B%E5%AE%88%E8%AD%B7%E6%88%B0.html) (或複製的 [index.html](file:///D:/20260711%20%E5%A1%94%E9%98%B2%E7%B6%B2%E9%A0%81/index.html))
+* **📱 本地響應式手機/平板版檔案**：[英文單字與三態守護戰_響應式.html](file:///D:/20260711%20%E5%A1%94%E9%98%B2%E7%B6%B2%E9%A0%81/%E8%8B%B1%E6%96%87%E5%96%AE%E5%AD%97%E8%88%87%E4%B8%89%E6%85%8B%E5%AE%88%E8%AD%B7%E6%88%B0_%E9%9F%BF%E6%87%89%E5%BC%8F.html) (此響應式版本僅存於本地，尚未部屬至 GitHub)
 
 以下是開發與實作的完整歷程與核心功能說明。
 
