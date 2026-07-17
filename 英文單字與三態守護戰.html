@@ -832,6 +832,7 @@ const GAME_DATA = {"wls1": {"BK1": [{"word": "my", "display_word": "my", "chines
 const SoundManager = {
     ctx: null,
     enabled: true,
+    activeOscs: [],
 
     init() {
         if (this.ctx) return;
@@ -846,6 +847,15 @@ const SoundManager = {
         if (this.ctx && this.ctx.state === 'suspended') {
             this.ctx.resume();
         }
+    },
+
+    stopAll() {
+        this.activeOscs.forEach(osc => {
+            try {
+                osc.stop();
+            } catch(e) {}
+        });
+        this.activeOscs = [];
     },
 
     playTone(freqs, durations, type = 'sine', volume = 0.1, slide = false) {
@@ -879,6 +889,41 @@ const SoundManager = {
 
         osc.start(now);
         osc.stop(now + timeOffset);
+    },
+
+    playSong(notes, durations, type = 'sine', volume = 0.1) {
+        if (!this.enabled || !this.ctx) return;
+        this.resume();
+        this.stopAll();
+
+        let now = this.ctx.currentTime;
+        let timeOffset = 0;
+        
+        notes.forEach((freq, idx) => {
+            let dur = durations[idx] || 0.2;
+            let playDur = dur * 0.85;
+
+            const osc = this.ctx.createOscillator();
+            const gainNode = this.ctx.createGain();
+            
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, now + timeOffset);
+            
+            gainNode.gain.setValueAtTime(0, now + timeOffset);
+            gainNode.gain.linearRampToValueAtTime(volume, now + timeOffset + 0.01);
+            gainNode.gain.setValueAtTime(volume, now + timeOffset + playDur - 0.01);
+            gainNode.gain.exponentialRampToValueAtTime(0.0001, now + timeOffset + playDur);
+            
+            osc.connect(gainNode);
+            gainNode.connect(this.ctx.destination);
+            
+            osc.start(now + timeOffset);
+            osc.stop(now + timeOffset + playDur);
+            
+            this.activeOscs.push(osc);
+            
+            timeOffset += dur;
+        });
     },
 
     playNoise(duration, volume = 0.1, isLowPass = false) {
@@ -946,11 +991,21 @@ const SoundManager = {
     },
 
     playWin() {
-        this.playTone([261.63, 329.63, 392.00, 523.25], [0.15, 0.15, 0.15, 0.4], 'sine', 0.08);
+        this.playSong(
+            [523.25, 659.25, 783.99, 523.25, 659.25, 783.99, 1046.50, 783.99, 1046.50, 1318.51, 1567.98, 2093.00],
+            [0.12, 0.12, 0.12, 0.12, 0.12, 0.12, 0.18, 0.12, 0.12, 0.12, 0.12, 0.5],
+            'triangle',
+            0.08
+        );
     },
 
     playLose() {
-        this.playTone([196.00, 155.56, 146.83], [0.2, 0.2, 0.5], 'triangle', 0.1);
+        this.playSong(
+            [523.25, 493.88, 466.16, 440.00, 415.30, 392.00, 349.23, 311.13, 293.66, 261.63],
+            [0.18, 0.18, 0.18, 0.18, 0.22, 0.22, 0.22, 0.25, 0.25, 0.7],
+            'sawtooth',
+            0.06
+        );
     }
 };
 
@@ -1141,6 +1196,7 @@ function initAndStartGame() {
     }
 
     SoundManager.init();
+    SoundManager.stopAll();
     SoundManager.playSpawn();
     gameRunning = true;
     updateCoinsDisplay();
@@ -2068,6 +2124,7 @@ function restartLevel() {
 
 function backToMenu() {
     gameRunning = false;
+    SoundManager.stopAll();
     document.getElementById('game-over-modal').style.display = 'none';
     document.getElementById('game-interface').style.display = 'none';
     document.getElementById('main-menu').style.display = 'flex';
