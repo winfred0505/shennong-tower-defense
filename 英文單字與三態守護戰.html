@@ -1065,6 +1065,7 @@ let wrongCount = 0;
 let totalSpawned = 0;
 let totalKilled = 0;
 let meteors = []; // 隕石雨物理對象
+let baseDestructionMessageShown = false; // 混亂基地毀壞通知標籤
 
 // 城堡與戰鬥設定 (畫布高度減小至 260px)
 const canvas = document.getElementById('gameCanvas');
@@ -1176,6 +1177,7 @@ function initAndStartGame() {
     baseBossSummoned = false;
     ultimateEffectTimer = 0;
     meteors = [];
+    baseDestructionMessageShown = false;
     updateComboDisplay();
     const pauseBtn = document.getElementById('pause-btn');
     if (pauseBtn) pauseBtn.innerText = "⏸️ 暫停";
@@ -1657,7 +1659,7 @@ function spawnVariantEnemy() {
         range: 25,
         damage: 15,
         color: shinyColor,
-        radius: 21, // 增大了1.5倍 (原本是 14)
+        radius: 30, // 增大到 30px (原本是 21)
         coinReward: reward,
         attackCooldown: 0,
         attackInterval: 1200,
@@ -1674,6 +1676,10 @@ function checkEnemyBaseHp() {
     if (enemyBase.hp > 0 && (enemyBase.hp / enemyBase.maxHp) <= 0.2 && !baseBossSummoned) {
         baseBossSummoned = true;
         spawnBaseBoss();
+    }
+    if (enemyBase.hp <= 0 && !baseDestructionMessageShown) {
+        baseDestructionMessageShown = true;
+        createFloatingText("💥 混亂基地已被摧毀！消滅剩餘巨獸以奪取勝利！", enemyBase.x - 260, enemyBase.y - 30, '#ffbe76');
     }
 }
 
@@ -1940,7 +1946,7 @@ function updateGameObjects(deltaTime) {
                 p.attackCooldown = p.attackInterval;
                 performAttack(p, nearestEnemy);
             }
-        } else if (castleDist <= p.range) {
+        } else if (enemyBase.hp > 0 && castleDist <= p.range) {
             p.state = 'attack';
             if (p.attackCooldown <= 0) {
                 p.attackCooldown = p.attackInterval;
@@ -1948,7 +1954,11 @@ function updateGameObjects(deltaTime) {
             }
         } else {
             p.state = 'move';
-            p.x += p.speed * deltaRatio;
+            if (p.x < enemyBase.x) {
+                p.x += p.speed * deltaRatio;
+            } else {
+                p.state = 'idle';
+            }
         }
         
         if (p.attackCooldown > 0) {
@@ -2085,9 +2095,11 @@ function updateGameObjects(deltaTime) {
         }
     });
 
+    // 勝利條件：混亂基地 HP 歸零，且已召喚的 Boss 也被消滅
+    const isBossActive = enemyUnits.some(e => e.isBoss);
     if (playerBase.hp <= 0 && gameRunning) {
         showGameOver(false);
-    } else if (enemyBase.hp <= 0 && gameRunning) {
+    } else if (enemyBase.hp <= 0 && !isBossActive && baseBossSummoned && gameRunning) {
         showGameOver(true);
     }
 }
