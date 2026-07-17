@@ -744,6 +744,7 @@
     <!-- 頂部列 -->
     <div class="game-header">
         <div class="game-info-deck" id="deck-display-name">WLS1 Book 1</div>
+        <div id="combo-badge" style="display: none; background: rgba(255, 190, 118, 0.15); border: 1px solid #ffbe76; color: #ffbe76; padding: 2px 10px; border-radius: 12px; font-weight: 800; font-size: 0.85rem;">🔥 連擊: 0</div>
         <div style="display: flex; gap: 8px;">
             <button class="back-menu-btn" id="mute-btn" onclick="toggleMute()">🔊 音效: 開</button>
             <button class="back-menu-btn" id="pause-btn" onclick="togglePause()">⏸️ 暫停</button>
@@ -1007,6 +1008,15 @@ const SoundManager = {
             'sawtooth',
             0.06
         );
+    },
+
+    playUltimate() {
+        this.playTone([261.63, 523.25, 1046.50], [0.1, 0.1, 0.2], 'sine', 0.1, true);
+        setTimeout(() => this.playNoise(0.4, 0.15, true), 300);
+    },
+
+    playBossAlert() {
+        this.playTone([880, 440, 880, 440], [0.15, 0.15, 0.15, 0.15], 'sawtooth', 0.08);
     }
 };
 
@@ -1042,6 +1052,9 @@ let selectedQuestionType = 'mix'; // mix, meaning, sentence
 // 遊戲即時狀態
 let gameRunning = false;
 let gamePaused = false; // 遊戲暫停狀態
+let comboCount = 0; // 連續答對題數計數器
+let baseBossSummoned = false; // 混亂基地護衛Boss是否已生成
+let ultimateEffectTimer = 0; // 城堡雷射大招特效計時器
 let coins = 100;
 let lastTime = 0;
 let spawnTimer = 0;
@@ -1156,6 +1169,10 @@ function initAndStartGame() {
     totalKilled = 0;
     coins = 100;
     gamePaused = false;
+    comboCount = 0;
+    baseBossSummoned = false;
+    ultimateEffectTimer = 0;
+    updateComboDisplay();
     const pauseBtn = document.getElementById('pause-btn');
     if (pauseBtn) pauseBtn.innerText = "⏸️ 暫停";
     
@@ -1512,6 +1529,17 @@ function checkAnswer(selectedOpt, btnEl) {
         addCoins(150);
         SoundManager.playCorrect();
         
+        // 連擊與城堡大招邏輯
+        comboCount++;
+        updateComboDisplay();
+        if (comboCount >= 3) {
+            triggerCastleUltimate();
+            comboCount = 0;
+            setTimeout(() => {
+                updateComboDisplay();
+            }, 600);
+        }
+        
         const rect = btnEl.getBoundingClientRect();
         createFloatingText(`+💰150`, rect.left + rect.width / 2, rect.top, '#ffd700');
         
@@ -1522,6 +1550,11 @@ function checkAnswer(selectedOpt, btnEl) {
         wrongCount++;
         btnEl.classList.add('wrong');
         SoundManager.playWrong();
+        
+        // 答錯邏輯：連擊歸零，混亂基地走出雙倍血量異色怪
+        comboCount = 0;
+        updateComboDisplay();
+        spawnVariantEnemy();
         
         buttons.forEach(b => {
             if (b.innerText === currentQuiz.correctAnswer) {
@@ -1560,6 +1593,112 @@ function triggerQuizCooldown() {
 function addCoins(amount) {
     coins += amount;
     updateCoinsDisplay();
+}
+
+// ========================================================
+// 🛡️ 城堡大招、連擊、異色怪與基地Boss系統
+// ========================================================
+function updateComboDisplay() {
+    const badge = document.getElementById('combo-badge');
+    if (!badge) return;
+    if (comboCount > 0) {
+        badge.innerText = `🔥 連擊: ${comboCount}`;
+        badge.style.display = 'block';
+    } else {
+        badge.style.display = 'none';
+    }
+}
+
+function triggerCastleUltimate() {
+    ultimateEffectTimer = 45; // 45幀雷射特效
+    SoundManager.playUltimate();
+    
+    // 對所有當前敵方單位造成 180 點高額傷害 (普通怪血量 90-130)
+    enemyUnits.forEach(e => {
+        e.hp -= 180;
+        createHitEffect(e.x, e.y, '#00f2fe');
+    });
+    
+    createFloatingText("💥 知識城堡施展大招！", playerBase.x + playerBase.width + 50, playerBase.y - 10, '#00f2fe');
+}
+
+function spawnVariantEnemy() {
+    if (!gameRunning) return;
+    
+    const dataItem = currentQuizBank[Math.floor(Math.random() * currentQuizBank.length)];
+    let labelText = selectedMode === 'verbs' ? dataItem.past : dataItem.word;
+    
+    let baseHp = 90 + totalKilled * 3;
+    let hp = baseHp * 2; // 2倍血量
+    let reward = 40; // 2倍金幣獎勵
+    
+    // 亮粉色代表異色怪 (Variant/Shiny Monster)
+    let shinyColor = '#ff007f'; 
+    
+    const enemy = {
+        id: 'e_shiny_' + Date.now() + '_' + Math.random(),
+        label: "🌟 " + labelText,
+        x: enemyBase.x,
+        y: 205 + (Math.random() * 16 - 8),
+        hp: hp,
+        maxHp: hp,
+        speed: -0.6 - (Math.random() * 0.3), // 稍慢
+        range: 25,
+        damage: 15,
+        color: shinyColor,
+        radius: 14, // 稍大
+        coinReward: reward,
+        attackCooldown: 0,
+        attackInterval: 1200,
+        state: 'move',
+        isBoss: false,
+        isShiny: true
+    };
+    
+    enemyUnits.push(enemy);
+    createFloatingText("⚠️ 混亂基地召喚出異色怪！", enemyBase.x - 120, enemyBase.y - 10, shinyColor);
+}
+
+function checkEnemyBaseHp() {
+    if (enemyBase.hp > 0 && (enemyBase.hp / enemyBase.maxHp) <= 0.2 && !baseBossSummoned) {
+        baseBossSummoned = true;
+        spawnBaseBoss();
+    }
+}
+
+function spawnBaseBoss() {
+    if (!gameRunning) return;
+
+    const dataItem = currentQuizBank[Math.floor(Math.random() * currentQuizBank.length)];
+    let labelText = selectedMode === 'verbs' ? dataItem.base.toUpperCase() : dataItem.word.toUpperCase();
+    
+    let baseHp = 90 + totalKilled * 3;
+    let hp = baseHp * 3; // 3倍血量
+    let reward = 100;
+    
+    const boss = {
+        id: 'e_baseboss_' + Date.now() + '_' + Math.random(),
+        label: "🚨 基地巨獸: " + labelText + " 🚨",
+        x: enemyBase.x,
+        y: 205,
+        hp: hp,
+        maxHp: hp,
+        speed: -0.4,
+        range: 35,
+        damage: 30, // 巨額傷害
+        color: '#d63031', // 深紅色
+        radius: 20, // 巨大化
+        coinReward: reward,
+        attackCooldown: 0,
+        attackInterval: 1500,
+        state: 'move',
+        isBoss: true
+    };
+
+    enemyUnits.push(boss);
+    
+    createFloatingText("🚨 基地守護巨獸走出基地！", enemyBase.x - 150, enemyBase.y - 30, '#d63031');
+    SoundManager.playBossAlert();
 }
 
 // ========================================================
@@ -1826,8 +1965,17 @@ function updateGameObjects(deltaTime) {
                         createHitEffect(e.x, e.y - 6, e.color);
                     }
                 });
+                // 濺射傷害到敵方基地
+                if (Math.abs(enemyBase.x - proj.x) < 70) {
+                    enemyBase.hp -= proj.damage;
+                    createHitEffect(enemyBase.x, enemyBase.y + enemyBase.height/2, '#fff');
+                    checkEnemyBaseHp();
+                }
             } else {
                 proj.target.hp -= proj.damage;
+                if (proj.target === enemyBase) {
+                    checkEnemyBaseHp();
+                }
                 createHitEffect(proj.x, proj.y, proj.target.color || '#fff');
                 SoundManager.playHit();
             }
@@ -1891,6 +2039,9 @@ function performAttack(attacker, defender) {
         SoundManager.playShoot();
     } else {
         defender.hp -= attacker.damage;
+        if (defender === enemyBase) {
+            checkEnemyBaseHp();
+        }
         let hitX = defender.x + (defender.width ? defender.width/2 : 0);
         let hitY = defender.y + (defender.height ? defender.height/2 : -6);
         createHitEffect(hitX, hitY, defender.color || '#fff');
@@ -2184,6 +2335,36 @@ function renderGame() {
         ctx.fill();
     });
     ctx.globalAlpha = 1.0;
+
+    // 繪製城堡釋放絕招雷射特效
+    if (ultimateEffectTimer > 0) {
+        ctx.save();
+        ctx.globalAlpha = Math.min(1.0, ultimateEffectTimer / 30);
+        
+        // 藍色外螢光
+        ctx.strokeStyle = 'rgba(0, 242, 254, 0.45)';
+        ctx.lineWidth = 45;
+        ctx.shadowColor = '#00f2fe';
+        ctx.shadowBlur = 15;
+        ctx.beginPath();
+        ctx.moveTo(playerBase.x + playerBase.width, 200);
+        ctx.lineTo(enemyBase.x, 200);
+        ctx.stroke();
+
+        // 白色雷射中心
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 14;
+        ctx.shadowBlur = 0;
+        ctx.beginPath();
+        ctx.moveTo(playerBase.x + playerBase.width, 200);
+        ctx.lineTo(enemyBase.x, 200);
+        ctx.stroke();
+
+        ctx.restore();
+        if (!gamePaused) {
+            ultimateEffectTimer--;
+        }
+    }
 
     // 若處於暫停狀態，在畫布中央覆蓋半透明遮罩與暫停文字
     if (gamePaused) {
