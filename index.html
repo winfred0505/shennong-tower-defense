@@ -746,6 +746,7 @@
         <div class="game-info-deck" id="deck-display-name">WLS1 Book 1</div>
         <div style="display: flex; gap: 8px;">
             <button class="back-menu-btn" id="mute-btn" onclick="toggleMute()">🔊 音效: 開</button>
+            <button class="back-menu-btn" id="pause-btn" onclick="togglePause()">⏸️ 暫停</button>
             <button class="back-menu-btn" onclick="confirmBackToMenu()">返回主選單</button>
         </div>
     </div>
@@ -1015,6 +1016,21 @@ function toggleMute() {
     btn.innerText = SoundManager.enabled ? "🔊 音效: 開" : "🔇 音效: 關";
 }
 
+function togglePause() {
+    if (!gameRunning) return;
+    gamePaused = !gamePaused;
+    const btn = document.getElementById('pause-btn');
+    btn.innerText = gamePaused ? "▶️ 繼續" : "⏸️ 暫停";
+    
+    // 暫停時將所有選項按鈕禁用，防止作弊
+    const buttons = document.querySelectorAll('#options-container .option-btn');
+    buttons.forEach(b => {
+        if (!quizCooldownActive) {
+            b.disabled = gamePaused;
+        }
+    });
+}
+
 // ========================================================
 // 全域狀態配置
 // ========================================================
@@ -1025,6 +1041,7 @@ let selectedQuestionType = 'mix'; // mix, meaning, sentence
 
 // 遊戲即時狀態
 let gameRunning = false;
+let gamePaused = false; // 遊戲暫停狀態
 let coins = 100;
 let lastTime = 0;
 let spawnTimer = 0;
@@ -1138,6 +1155,9 @@ function initAndStartGame() {
     totalSpawned = 0;
     totalKilled = 0;
     coins = 100;
+    gamePaused = false;
+    const pauseBtn = document.getElementById('pause-btn');
+    if (pauseBtn) pauseBtn.innerText = "⏸️ 暫停";
     
     playerBase.hp = playerBase.maxHp;
     enemyBase.hp = enemyBase.maxHp;
@@ -1329,7 +1349,7 @@ function maskSentence(sentence, rawWord) {
 // 題目產生器邏輯
 // ========================================================
 function initQuiz() {
-    if (!gameRunning || quizCooldownActive) return;
+    if (!gameRunning || gamePaused || quizCooldownActive) return;
 
     const dataItem = currentQuizBank[Math.floor(Math.random() * currentQuizBank.length)];
     currentQuiz = {};
@@ -1481,7 +1501,7 @@ function generateOptionsMarkup(correctOption, distractors) {
 // 答題判定與獎懲
 // ========================================================
 function checkAnswer(selectedOpt, btnEl) {
-    if (!gameRunning || quizCooldownActive) return;
+    if (!gameRunning || gamePaused || quizCooldownActive) return;
 
     const buttons = document.querySelectorAll('#options-container .option-btn');
     buttons.forEach(b => b.disabled = true);
@@ -1546,7 +1566,7 @@ function addCoins(amount) {
 // 召喚防衛軍與物理
 // ========================================================
 function spawnUnit(type) {
-    if (!gameRunning) return;
+    if (!gameRunning || gamePaused) return;
     
     const conf = activeUnitConfigs[type];
     const now = Date.now();
@@ -1935,7 +1955,7 @@ function gameLoop(timestamp) {
     const deltaTime = timestamp - lastTime;
     lastTime = timestamp;
 
-    if (gameRunning) {
+    if (gameRunning && !gamePaused) {
         coins += 2 * (deltaTime / 1000);
         updateCoinsDisplay();
         
@@ -1981,6 +2001,115 @@ function renderGame() {
         ctx.arc(p.x + p.size/2 - 1, p.y - 2 + bounce, 1.5, 0, Math.PI * 2);
         ctx.fill();
 
+        // 繪製兵種對應的武器/防具外觀 (盾牌、弓箭、寶劍、法杖)
+        let typeLower = p.type.toLowerCase();
+        if (typeLower === 'noun' || typeLower === 'aaa') {
+            // 名詞盾牌 (Noun Shieldman) - 繪製精緻的十字防衛金盾
+            ctx.fillStyle = '#fbbf24'; // 金色盾牌邊框
+            ctx.beginPath();
+            let sx = p.x + p.size * 0.65;
+            let sy = p.y + bounce;
+            ctx.moveTo(sx, sy - 7);
+            ctx.lineTo(sx + 5, sy - 4);
+            ctx.lineTo(sx + 5, sy + 3);
+            ctx.lineTo(sx, sy + 8);
+            ctx.lineTo(sx - 5, sy + 3);
+            ctx.lineTo(sx - 5, sy - 4);
+            ctx.closePath();
+            ctx.fill();
+            
+            ctx.fillStyle = '#ef4444'; // 紅色中心徽記
+            ctx.beginPath();
+            ctx.moveTo(sx, sy - 4);
+            ctx.lineTo(sx + 3, sy - 2);
+            ctx.lineTo(sx + 3, sy + 2);
+            ctx.lineTo(sx, sy + 5);
+            ctx.lineTo(sx - 3, sy + 2);
+            ctx.lineTo(sx - 3, sy - 2);
+            ctx.closePath();
+            ctx.fill();
+        } else if (typeLower === 'adj' || typeLower === 'aba') {
+            // 形容詞射手 (Adjective Archer) - 繪製木製長弓
+            ctx.strokeStyle = '#d97706'; // 褐木色弓身
+            ctx.lineWidth = 2.5;
+            ctx.beginPath();
+            let bx = p.x + p.size * 0.5;
+            let by = p.y + bounce;
+            ctx.arc(bx, by, 7.5, -Math.PI * 0.5, Math.PI * 0.5, false);
+            ctx.stroke();
+            
+            ctx.strokeStyle = '#e2e8f0'; // 銀色弓弦
+            ctx.lineWidth = 0.8;
+            ctx.beginPath();
+            ctx.moveTo(bx, by - 7.5);
+            ctx.lineTo(bx, by + 7.5);
+            ctx.stroke();
+        } else if (typeLower === 'verb' || typeLower === 'abb') {
+            // 動詞聖騎士 (Verb Paladin) - 繪製聖劍，且攻擊時會揮動
+            let sx = p.x + p.size * 0.5;
+            let sy = p.y + bounce + 2;
+            
+            ctx.save();
+            ctx.translate(sx, sy);
+            
+            let angle = -Math.PI / 4; // 預設斜朝上指向右方
+            if (p.state === 'attack') {
+                let attackProgress = (p.attackInterval - p.attackCooldown) / p.attackInterval;
+                if (p.attackCooldown <= 0) attackProgress = 0;
+                // 揮砍：利用簡諧正弦波模擬 -45度到 +45度的揮舞軌跡
+                angle = -Math.PI / 4 + Math.sin(attackProgress * Math.PI) * (Math.PI / 2);
+            }
+            ctx.rotate(angle);
+            
+            // 劍身 (銀鋼灰)
+            ctx.strokeStyle = '#cbd5e1';
+            ctx.lineWidth = 3.2;
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(12, 0);
+            ctx.stroke();
+            
+            // 護手 (金黃色)
+            ctx.strokeStyle = '#fbbf24';
+            ctx.lineWidth = 2.5;
+            ctx.beginPath();
+            ctx.moveTo(2.5, -3.5);
+            ctx.lineTo(2.5, 3.5);
+            ctx.stroke();
+            
+            // 劍柄 (黑褐色)
+            ctx.strokeStyle = '#451a03';
+            ctx.lineWidth = 2.2;
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(-3, 0);
+            ctx.stroke();
+            
+            ctx.restore();
+        } else if (typeLower === 'adv') {
+            // 副詞法師 (Adverb Mage) - 繪製魔杖與發光魔法寶石
+            let stx = p.x + p.size * 0.45;
+            let sty = p.y + bounce + 2;
+            
+            // 魔杖木柄
+            ctx.strokeStyle = '#854d0e';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(stx, sty + 8);
+            ctx.lineTo(stx + 5, sty - 7);
+            ctx.stroke();
+            
+            // 魔杖頂部水晶 (帶有霓虹螢光黃發光特效)
+            ctx.fillStyle = '#f59e0b';
+            ctx.shadowColor = '#fbbf24';
+            ctx.shadowBlur = 8;
+            ctx.beginPath();
+            ctx.arc(stx + 5, sty - 8, 3.5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.shadowBlur = 0; // 重置發光設定
+        }
+
         ctx.fillStyle = '#ffffff';
         ctx.font = 'bold 9.5px Outfit';
         ctx.textAlign = 'center';
@@ -2014,10 +2143,37 @@ function renderGame() {
     });
 
     projectiles.forEach(p => {
-        ctx.fillStyle = p.isAoE ? '#e67e22' : '#f1c40f';
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.isAoE ? 5 : 3.5, 0, Math.PI * 2);
-        ctx.fill();
+        if (!p.isAoE) {
+            // 形容詞射手與 ABA 巡邏者射出真正的「飛箭」
+            ctx.strokeStyle = '#fbbf24'; // 金黃色箭矢
+            ctx.lineWidth = 1.8;
+            ctx.beginPath();
+            
+            // 根據飛行速度正負向繪製箭羽與箭身
+            let shaftLengthX = p.vx > 0 ? -9 : 9;
+            ctx.moveTo(p.x + shaftLengthX, p.y);
+            ctx.lineTo(p.x, p.y);
+            ctx.stroke();
+            
+            // 繪製箭頭三角型
+            ctx.fillStyle = '#fbbf24';
+            ctx.beginPath();
+            ctx.moveTo(p.x, p.y);
+            let arrowBackX = p.vx > 0 ? -3 : 3;
+            ctx.lineTo(p.x + arrowBackX, p.y - 2.5);
+            ctx.lineTo(p.x + arrowBackX, p.y + 2.5);
+            ctx.closePath();
+            ctx.fill();
+        } else {
+            // 副詞法師發射具魔幻外觀的發光奧術火彈
+            ctx.fillStyle = '#ea580c';
+            ctx.shadowColor = '#f97316';
+            ctx.shadowBlur = 8;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, 5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+        }
     });
 
     particles.forEach(p => {
@@ -2028,6 +2184,21 @@ function renderGame() {
         ctx.fill();
     });
     ctx.globalAlpha = 1.0;
+
+    // 若處於暫停狀態，在畫布中央覆蓋半透明遮罩與暫停文字
+    if (gamePaused) {
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.48)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 24px Noto Sans TC';
+        ctx.textAlign = 'center';
+        ctx.fillText("⏸️ 遊戲暫停中", canvas.width / 2, canvas.height / 2 + 5);
+        
+        ctx.font = '13.5px Noto Sans TC';
+        ctx.fillStyle = '#cbd5e1';
+        ctx.fillText("點擊上方「繼續」按鈕以恢復守護戰", canvas.width / 2, canvas.height / 2 + 28);
+    }
 }
 
 function drawBackground() {
