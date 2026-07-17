@@ -1205,6 +1205,7 @@ let selectedQuestionType = 'mix'; // mix, meaning, sentence
 let gameRunning = false;
 let gamePaused = false; // 遊戲暫停狀態
 let comboCount = 0; // 連續答對題數計數器
+let wrongComboCount = 0; // 連續答錯題數計數器
 let baseBossSummoned = false; // 混亂基地護衛Boss是否已生成
 let ultimateEffectTimer = 0; // 城堡雷射大招特效計時器
 let coins = 100;
@@ -1215,6 +1216,7 @@ let correctCount = 0;
 let wrongCount = 0;
 let totalSpawned = 0;
 let totalKilled = 0;
+let meteors = []; // 隕石雨物理對象
 
 // 城堡與戰鬥設定 (畫布高度減小至 260px)
 const canvas = document.getElementById('gameCanvas');
@@ -1322,8 +1324,10 @@ function initAndStartGame() {
     coins = 100;
     gamePaused = false;
     comboCount = 0;
+    wrongComboCount = 0;
     baseBossSummoned = false;
     ultimateEffectTimer = 0;
+    meteors = [];
     updateComboDisplay();
     const pauseBtn = document.getElementById('pause-btn');
     if (pauseBtn) pauseBtn.innerText = "⏸️ 暫停";
@@ -1683,6 +1687,7 @@ function checkAnswer(selectedOpt, btnEl) {
         
         // 連擊與城堡大招邏輯
         comboCount++;
+        wrongComboCount = 0; // 答對重設連續答錯計數器
         updateComboDisplay();
         if (comboCount >= 3) {
             triggerCastleUltimate();
@@ -1703,10 +1708,16 @@ function checkAnswer(selectedOpt, btnEl) {
         btnEl.classList.add('wrong');
         SoundManager.playWrong();
         
-        // 答錯邏輯：連擊歸零，混亂基地走出雙倍血量異色怪
+        // 答錯邏輯：連擊歸零，連續答錯計數加一
         comboCount = 0;
+        wrongComboCount++;
         updateComboDisplay();
         spawnVariantEnemy();
+        
+        if (wrongComboCount >= 2) {
+            triggerChaosUltimate();
+            wrongComboCount = 0;
+        }
         
         buttons.forEach(b => {
             if (b.innerText === currentQuiz.correctAnswer) {
@@ -1851,6 +1862,27 @@ function spawnBaseBoss() {
     
     createFloatingText("🚨 基地守護巨獸走出基地！", enemyBase.x - 150, enemyBase.y - 30, '#d63031');
     SoundManager.playBossAlert();
+}
+
+function triggerChaosUltimate() {
+    SoundManager.playBossAlert();
+    createFloatingText("☄️ 混亂基地施展絕招：天降隕石雨！", enemyBase.x - 240, enemyBase.y - 10, '#ff3838');
+    
+    // 生成 6 顆帶有隨機位置的隕石雨
+    for (let i = 0; i < 6; i++) {
+        let targetX = 50 + Math.random() * 520; // 轟炸我方腹地與中場
+        meteors.push({
+            x: targetX - 70, // 斜向降落
+            y: -50 - (i * 30), // 交錯時間降落
+            targetX: targetX,
+            targetY: 220, // 落地高度為地面 220px
+            speed: 3.5 + Math.random() * 2,
+            damageDealt: false
+        });
+    }
+    
+    // 直接重創我方基地防守牆 80 點生命值
+    playerBase.hp = Math.max(0, playerBase.hp - 80);
 }
 
 // ========================================================
@@ -2167,6 +2199,30 @@ function updateGameObjects(deltaTime) {
         }
     });
 
+    // 更新隕石物理運動與碰撞
+    meteors.forEach((m, idx) => {
+        m.x += 1.8 * deltaRatio;
+        m.y += m.speed * deltaRatio;
+        
+        if (m.y >= m.targetY) {
+            // 隕石落地爆炸！
+            createBlastEffect(m.x, m.targetY, '#ff4d4f');
+            SoundManager.playExplosion();
+            
+            if (!m.damageDealt) {
+                m.damageDealt = true;
+                // 對落地範圍內的我方士兵造成 90 點高傷害
+                playerUnits.forEach(p => {
+                    if (Math.abs(p.x - m.x) < 45) {
+                        p.hp -= 90;
+                        createHitEffect(p.x, p.y - 4, '#ff3838');
+                    }
+                });
+            }
+            meteors.splice(idx, 1);
+        }
+    });
+
     if (playerBase.hp <= 0 && gameRunning) {
         showGameOver(false);
     } else if (enemyBase.hp <= 0 && gameRunning) {
@@ -2422,27 +2478,193 @@ function renderGame() {
     });
 
     enemyUnits.forEach(e => {
-        ctx.fillStyle = e.color;
-        ctx.beginPath();
-        let shake = e.state === 'move' ? Math.sin(Date.now() / 90) * 2.0 : 0;
-        ctx.arc(e.x, e.y + shake, e.radius, 0, Math.PI * 2);
-        ctx.fill();
+        if (e.isShiny) {
+            // 火焰外觀 (Burning Flame Visual)
+            ctx.save();
+            let shake = e.state === 'move' ? Math.sin(Date.now() / 80) * 2.5 : 0;
+            ctx.translate(e.x, e.y + shake);
+            
+            // 隨機產生上升的火星粒子
+            if (Math.random() < 0.25 && !gamePaused) {
+                particles.push({
+                    x: e.x + (Math.random() * 12 - 6),
+                    y: e.y + shake - 8,
+                    vx: (Math.random() * 1 - 0.5),
+                    vy: -(Math.random() * 1.5 + 0.5),
+                    color: '#ff7675',
+                    life: 200 + Math.random() * 150,
+                    size: 1 + Math.random() * 1.5
+                });
+            }
 
-        ctx.fillStyle = '#fff';
-        ctx.beginPath();
-        ctx.arc(e.x - e.radius/3, e.y - 3 + shake, 4, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = '#eb4d4b';
-        ctx.beginPath();
-        ctx.arc(e.x - e.radius/3 - 1, e.y - 3 + shake, 2, 0, Math.PI * 2);
-        ctx.fill();
+            // 漸層繪製主火焰本體
+            let flameGrad = ctx.createLinearGradient(0, 8, 0, -14);
+            flameGrad.addColorStop(0, '#eb4d4b'); // 底座紅色
+            flameGrad.addColorStop(0.4, '#f0932b'); // 中段橙色
+            flameGrad.addColorStop(1, '#ffbe76'); // 頂端黃色
+            
+            ctx.fillStyle = flameGrad;
+            ctx.shadowColor = '#f0932b';
+            ctx.shadowBlur = 12;
+            ctx.beginPath();
+            
+            ctx.moveTo(0, 10);
+            ctx.bezierCurveTo(-10, 8, -12, 0, -8, -6);
+            ctx.bezierCurveTo(-12, -10, -5, -15, 0, -20); // 焰尖
+            ctx.bezierCurveTo(5, -15, 12, -10, 8, -6);
+            ctx.bezierCurveTo(12, 0, 10, 8, 0, 10);
+            ctx.closePath();
+            ctx.fill();
+            
+            // 明亮的內焰核心
+            ctx.fillStyle = '#ffffff';
+            ctx.shadowBlur = 0;
+            ctx.beginPath();
+            ctx.moveTo(0, 7);
+            ctx.bezierCurveTo(-5, 6, -6, 1, -4, -3);
+            ctx.bezierCurveTo(-6, -6, -2, -10, 0, -13);
+            ctx.bezierCurveTo(2, -10, 6, -6, 4, -3);
+            ctx.bezierCurveTo(6, 1, 5, 6, 0, 7);
+            ctx.closePath();
+            ctx.fill();
+            
+            ctx.restore();
+        } else if (e.isBoss) {
+            // 黑色團霧鎧甲長刀 Boss 外觀
+            ctx.save();
+            let shake = e.state === 'move' ? Math.sin(Date.now() / 90) * 2.0 : 0;
+            ctx.translate(e.x, e.y + shake);
+
+            // 1. 繪製黑色團霧 (Black Shroud of Mist/Smoke)
+            ctx.fillStyle = 'rgba(15, 12, 24, 0.7)'; // 深邃黑霧
+            ctx.shadowColor = '#8a2be2';
+            ctx.shadowBlur = 10;
+            for (let i = 0; i < 5; i++) {
+                let ox = Math.sin(Date.now() / 100 + i * 1.2) * 5;
+                let oy = Math.cos(Date.now() / 100 + i * 1.2) * 5;
+                ctx.beginPath();
+                ctx.arc(ox, oy, e.radius * 0.9, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.shadowBlur = 0; // 重置
+
+            // 2. 繪製暗鐵鎧甲與鋼肩甲 (Dark Steel Armor & Helmet)
+            ctx.fillStyle = '#4b5563'; // 暗鋼灰色
+            ctx.strokeStyle = '#1f2937';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(-18, 2);
+            ctx.lineTo(-12, -4);
+            ctx.lineTo(-6, 2);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.moveTo(6, 2);
+            ctx.lineTo(12, -4);
+            ctx.lineTo(18, 2);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+
+            // 胸甲 (Breastplate)
+            ctx.fillStyle = '#374151';
+            ctx.beginPath();
+            ctx.moveTo(-10, 2);
+            ctx.lineTo(10, 2);
+            ctx.lineTo(6, 12);
+            ctx.lineTo(-6, 12);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+            // 胸甲裝飾線 (猩紅線)
+            ctx.strokeStyle = '#ef4444';
+            ctx.lineWidth = 1.0;
+            ctx.beginPath();
+            ctx.moveTo(0, 2);
+            ctx.lineTo(0, 10);
+            ctx.stroke();
+
+            // 頭盔 (Helmet)
+            ctx.fillStyle = '#1f2937';
+            ctx.strokeStyle = '#111827';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.arc(0, -7, 8, Math.PI, 0); // 半圓頭盔
+            ctx.lineTo(5, -2);
+            ctx.lineTo(-5, -2);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+
+            // 猩紅雙眼 (Glow Red Eyes)
+            ctx.fillStyle = '#ff003c';
+            ctx.shadowColor = '#ff0000';
+            ctx.shadowBlur = 6;
+            ctx.beginPath();
+            ctx.arc(-3, -5, 1.8, 0, Math.PI * 2);
+            ctx.arc(3, -5, 1.8, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+
+            // 3. 繪製手持大長刀 (Holding Glaive/Naginata)
+            ctx.save();
+            let stickAngle = Math.PI / 4; // 朝向左方
+            if (e.state === 'attack') {
+                let progress = (e.attackInterval - e.attackCooldown) / e.attackInterval;
+                if (e.attackCooldown <= 0) progress = 0;
+                // 揮刀劈砍動畫 (從 45度到 120度)
+                stickAngle = Math.PI / 4 + Math.sin(progress * Math.PI) * (Math.PI / 2);
+            }
+            ctx.rotate(-stickAngle); // 面向左側，所以用負角度
+
+            // 長刀木柄
+            ctx.strokeStyle = '#451a03';
+            ctx.lineWidth = 2.2;
+            ctx.beginPath();
+            ctx.moveTo(0, 5);
+            ctx.lineTo(-24, 0);
+            ctx.stroke();
+
+            // 銀色刀刃 (Glaive Blade)
+            ctx.fillStyle = '#e2e8f0';
+            ctx.strokeStyle = '#94a3b8';
+            ctx.lineWidth = 1.0;
+            ctx.beginPath();
+            ctx.moveTo(-24, 0);
+            ctx.quadraticCurveTo(-34, -4, -38, -12); // 彎刀刃
+            ctx.quadraticCurveTo(-33, -8, -22, -1);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.restore();
+            ctx.restore();
+        } else {
+            // 普通怪獸
+            ctx.fillStyle = e.color;
+            ctx.beginPath();
+            let shake = e.state === 'move' ? Math.sin(Date.now() / 90) * 2.0 : 0;
+            ctx.arc(e.x, e.y + shake, e.radius, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = '#fff';
+            ctx.beginPath();
+            ctx.arc(e.x - e.radius/3, e.y - 3 + shake, 4, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#eb4d4b';
+            ctx.beginPath();
+            ctx.arc(e.x - e.radius/3 - 1, e.y - 3 + shake, 2, 0, Math.PI * 2);
+            ctx.fill();
+        }
 
         ctx.fillStyle = '#ff7675';
-        ctx.font = e.isBoss ? 'bold 14px Outfit' : 'bold 12px Outfit';
+        ctx.font = e.isBoss ? 'bold 12.5px Outfit' : 'bold 11px Outfit';
         ctx.textAlign = 'center';
-        ctx.fillText(e.label, e.x, e.y - e.radius - 10);
+        ctx.fillText(e.label, e.x, e.y - e.radius - 12);
 
-        drawHealthBar(e.x - 14, e.y - e.radius - 7, 28, 3, e.hp, e.maxHp);
+        drawHealthBar(e.x - 14, e.y - e.radius - 8, 28, 3, e.hp, e.maxHp);
     });
 
     projectiles.forEach(p => {
@@ -2487,6 +2709,34 @@ function renderGame() {
         ctx.fill();
     });
     ctx.globalAlpha = 1.0;
+
+    // 繪製降落中的隕石雨與火焰拖尾
+    meteors.forEach(m => {
+        if (m.y < -10) return;
+        ctx.save();
+        
+        // 隕石火焰拖尾
+        let grad = ctx.createLinearGradient(m.x - 12, m.y - 12, m.x, m.y);
+        grad.addColorStop(0, 'rgba(235, 77, 75, 0)');
+        grad.addColorStop(0.5, '#f0932b');
+        grad.addColorStop(1, '#ff4d4f');
+        ctx.strokeStyle = grad;
+        ctx.lineWidth = 5;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(m.x - 16, m.y - 16);
+        ctx.lineTo(m.x, m.y);
+        ctx.stroke();
+        
+        // 隕石核心
+        ctx.fillStyle = '#ff7675';
+        ctx.shadowColor = '#d63031';
+        ctx.shadowBlur = 8;
+        ctx.beginPath();
+        ctx.arc(m.x, m.y, 4.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+    });
 
     // 繪製城堡釋放絕招雷射特效
     if (ultimateEffectTimer > 0) {
