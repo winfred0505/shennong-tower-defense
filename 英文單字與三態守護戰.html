@@ -1657,7 +1657,7 @@ function spawnVariantEnemy() {
         range: 25,
         damage: 15,
         color: shinyColor,
-        radius: 14, // 稍大
+        radius: 21, // 增大了1.5倍 (原本是 14)
         coinReward: reward,
         attackCooldown: 0,
         attackInterval: 1200,
@@ -1691,14 +1691,14 @@ function spawnBaseBoss() {
         id: 'e_baseboss_' + Date.now() + '_' + Math.random(),
         label: "🚨 基地巨獸: " + labelText + " 🚨",
         x: enemyBase.x,
-        y: 205,
+        y: 190, // 高度貼地，y_center = 235 - 45 = 190
         hp: hp,
         maxHp: hp,
         speed: -0.4,
         range: 35,
         damage: 30, // 巨額傷害
         color: '#d63031', // 深紅色
-        radius: 20, // 巨大化
+        radius: 45, // 巨大化，高度與基地一致
         coinReward: reward,
         attackCooldown: 0,
         attackInterval: 1500,
@@ -1716,15 +1716,26 @@ function triggerChaosUltimate() {
     SoundManager.playBossAlert();
     createFloatingText("☄️ 混亂基地施展絕招：天降隕石雨！", enemyBase.x - 240, enemyBase.y - 10, '#ff3838');
     
-    // 生成 6 顆帶有隨機位置的隕石雨
+    // 生成 6 顆斜向我方基地飛行的巨型隕石
     for (let i = 0; i < 6; i++) {
-        let targetX = 50 + Math.random() * 520; // 轟炸我方腹地與中場
+        let targetX = 30 + Math.random() * 450; // 轟炸我方腹地與中左場
+        let startX = enemyBase.x + 35; // 從右側混亂基地上方發射
+        let startY = -60 - (i * 45); // 交錯時間降落
+        let targetY = 220; // 落地高度
+        let dy = targetY - startY;
+        let dx = startX - targetX;
+        
         meteors.push({
-            x: targetX - 70, // 斜向降落
-            y: -50 - (i * 30), // 交錯時間降落
+            startX: startX,
+            startY: startY,
+            x: startX,
+            y: startY,
             targetX: targetX,
-            targetY: 220, // 落地高度為地面 220px
-            speed: 3.5 + Math.random() * 2,
+            targetY: targetY,
+            dx: dx,
+            dy: dy,
+            speed: 4.0 + Math.random() * 2, // 降落速度
+            size: 8.5 + Math.random() * 4, // 放大尺寸增加震撼感 (原本是 4.5)
             damageDealt: false
         });
     }
@@ -2047,21 +2058,24 @@ function updateGameObjects(deltaTime) {
         }
     });
 
-    // 更新隕石物理運動與碰撞
+    // 更新隕石物理運動與自右向左斜向降落軌跡
     meteors.forEach((m, idx) => {
-        m.x += 1.8 * deltaRatio;
         m.y += m.speed * deltaRatio;
         
+        // 依據 Y 軸移動進度動態推算 X 軸坐標，使軌跡完美斜向左下方
+        let progress = (m.y - m.startY) / m.dy;
+        m.x = m.startX + (m.targetX - m.startX) * progress;
+        
         if (m.y >= m.targetY) {
-            // 隕石落地爆炸！
-            createBlastEffect(m.x, m.targetY, '#ff4d4f');
+            // 隕石在指定目標位置落地爆炸！
+            createBlastEffect(m.targetX, m.targetY, '#ff4d4f');
             SoundManager.playExplosion();
             
             if (!m.damageDealt) {
                 m.damageDealt = true;
-                // 對落地範圍內的我方士兵造成 90 點高傷害
+                // 對落地爆炸範圍 (半徑 55px) 內的我方士兵造成 90 點高傷害
                 playerUnits.forEach(p => {
-                    if (Math.abs(p.x - m.x) < 45) {
+                    if (Math.abs(p.x - m.targetX) < 55) {
                         p.hp -= 90;
                         createHitEffect(p.x, p.y - 4, '#ff3838');
                     }
@@ -2383,6 +2397,10 @@ function renderGame() {
             let shake = e.state === 'move' ? Math.sin(Date.now() / 90) * 2.0 : 0;
             ctx.translate(e.x, e.y + shake);
 
+            // 依據 Boss 半徑動態縮放所有元件，使其高度與混亂基地一致
+            let scale = e.radius / 20; 
+            ctx.scale(scale, scale);
+
             // 1. 繪製黑色團霧 (Black Shroud of Mist/Smoke)
             ctx.fillStyle = 'rgba(15, 12, 24, 0.7)'; // 深邃黑霧
             ctx.shadowColor = '#8a2be2';
@@ -2391,7 +2409,7 @@ function renderGame() {
                 let ox = Math.sin(Date.now() / 100 + i * 1.2) * 5;
                 let oy = Math.cos(Date.now() / 100 + i * 1.2) * 5;
                 ctx.beginPath();
-                ctx.arc(ox, oy, e.radius * 0.9, 0, Math.PI * 2);
+                ctx.arc(ox, oy, 18, 0, Math.PI * 2); // 18 is 20 * 0.9
                 ctx.fill();
             }
             ctx.shadowBlur = 0; // 重置
@@ -2512,7 +2530,10 @@ function renderGame() {
         ctx.textAlign = 'center';
         ctx.fillText(e.label, e.x, e.y - e.radius - 12);
 
-        drawHealthBar(e.x - 14, e.y - e.radius - 8, 28, 3, e.hp, e.maxHp);
+        // 動態調整血條長度以配合體型 (普通 28px, 異色 40px, Boss 60px)
+        let barWidth = e.isBoss ? 60 : e.isShiny ? 40 : 28;
+        let barHeight = e.isBoss ? 4.5 : 3;
+        drawHealthBar(e.x - barWidth / 2, e.y - e.radius - 8, barWidth, barHeight, e.hp, e.maxHp);
     });
 
     projectiles.forEach(p => {
@@ -2558,30 +2579,35 @@ function renderGame() {
     });
     ctx.globalAlpha = 1.0;
 
-    // 繪製降落中的隕石雨與火焰拖尾
+    // 繪製自右上方降落的隕石雨與火焰拖尾 (依照斜角動態計算火焰軌跡)
     meteors.forEach(m => {
         if (m.y < -10) return;
         ctx.save();
         
-        // 隕石火焰拖尾
-        let grad = ctx.createLinearGradient(m.x - 12, m.y - 12, m.x, m.y);
+        // 依據軌跡夾角計算火焰拖尾起點
+        let angle = Math.atan2(m.targetY - m.startY, m.targetX - m.startX);
+        let trailLength = m.size * 3.5;
+        let trailX = m.x - Math.cos(angle) * trailLength;
+        let trailY = m.y - Math.sin(angle) * trailLength;
+        
+        let grad = ctx.createLinearGradient(trailX, trailY, m.x, m.y);
         grad.addColorStop(0, 'rgba(235, 77, 75, 0)');
-        grad.addColorStop(0.5, '#f0932b');
+        grad.addColorStop(0.4, '#f0932b');
         grad.addColorStop(1, '#ff4d4f');
         ctx.strokeStyle = grad;
-        ctx.lineWidth = 5;
+        ctx.lineWidth = m.size * 1.1;
         ctx.lineCap = 'round';
         ctx.beginPath();
-        ctx.moveTo(m.x - 16, m.y - 16);
+        ctx.moveTo(trailX, trailY);
         ctx.lineTo(m.x, m.y);
         ctx.stroke();
         
         // 隕石核心
         ctx.fillStyle = '#ff7675';
         ctx.shadowColor = '#d63031';
-        ctx.shadowBlur = 8;
+        ctx.shadowBlur = m.size * 1.5;
         ctx.beginPath();
-        ctx.arc(m.x, m.y, 4.5, 0, Math.PI * 2);
+        ctx.arc(m.x, m.y, m.size, 0, Math.PI * 2);
         ctx.fill();
         ctx.restore();
     });
